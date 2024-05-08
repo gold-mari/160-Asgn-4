@@ -265,6 +265,9 @@ function clearCanvas() {
 function keydown(ev) {
     let step;
     let radius, radians;
+    
+    let movementScale = 0.1;
+    let rotationScale = 0.02;
 
     if ([87, 65, 83, 68, 81, 69].includes(ev.keyCode)) { // If the movement is valid...
         // Get our 'step' vector, a normalized vector pointed from where 
@@ -273,7 +276,7 @@ function keydown(ev) {
         step = new Vector3(g_View.at);
         step.sub(g_View.eye);
         step.normalize();
-        step.mul(0.1);
+        step.mul(movementScale);
         if ([81, 69].includes(ev.keyCode)) { // If the movement is a rotation (is Q/E)...
             radius = Math.sqrt(Math.pow(step.elements[0], 2) + Math.pow(step.elements[0], 2));
             radians = Math.atan2(step.elements[2], step.elements[0]);
@@ -281,53 +284,44 @@ function keydown(ev) {
         }
     }
 
-    switch (ev.keyCode) {
-        case 87: {  // "W", move forward
+    if (ev.keyCode == 87 || ev.keyCode == 83) {
+        if (ev.keyCode == 87) {  // "W", move forward
             g_View.eye.add(step);
             g_View.at.add(step);
-            break;
-        }
-        case 65: {  // "A", move left
-            let left = Vector3.cross(step, g_View.up);
-            g_View.eye.sub(left);
-            g_View.at.sub(left);
-            break;
-        }
-        case 83: {  // "S", move backward
+        } else { // "S", move backward
             g_View.eye.sub(step);
             g_View.at.sub(step);
-            break;
         }
-        case 68: {  // "D", move right
-            let right = Vector3.cross(step, g_View.up);
+    }
+
+    if (ev.keyCode == 65 || ev.keyCode == 68) {
+        let right = Vector3.cross(step, g_View.up);
+        if (ev.keyCode == 65) {  // "A", move left
+            g_View.eye.sub(right);
+            g_View.at.sub(right);
+        } else { // "D", move right
             g_View.eye.add(right);
             g_View.at.add(right);
-            break
         }
-        case 81: { // "Q", turn counterclockwise
-            turnVector = new Vector3([
-                radius * Math.cos(radians - 0.02),
-                0,
-                radius * Math.sin(radians - 0.02)
-            ]);
+    }
 
-            console.log(g_View.eye);
-            g_View.at.set(g_View.eye);
-            g_View.at.add(turnVector);
-            break;
-        }
-        case 69: { // "E", turn clockwise
-            turnVector = new Vector3([
-                radius * Math.cos(radians + 0.02),
-                0,
-                radius * Math.sin(radians + 0.02)
-            ]);
+    if (ev.keyCode == 81 || ev.keyCode == 69) {
+        let newRadians;
 
-            console.log(g_View.eye);
-            g_View.at.set(g_View.eye);
-            g_View.at.add(turnVector);
-            break;
+        if (ev.keyCode == 81) {  // "Q", turn counterclockwise
+            newRadians = radians - rotationScale;
+        } else { // "D", move right
+            newRadians = radians + rotationScale;
         }
+
+        turnVector = new Vector3([
+            radius * Math.cos(newRadians),
+            0,
+            radius * Math.sin(newRadians)
+        ]);
+
+        g_View.at.set(g_View.eye);
+        g_View.at.add(turnVector);
     }
 
     renderAllShapes();
