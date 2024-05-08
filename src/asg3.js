@@ -127,53 +127,40 @@ function connectVariablesToGLSL() {
         return;
     }
 
-    a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-    if (a_Position < 0) {
-        console.log("Failed to get the storage location of a_Position");
-        return;
-    }
+    a_Position = getAttrib('a_Position');
+    a_UV = getAttrib('a_UV');
 
-    a_UV = gl.getAttribLocation(gl.program, 'a_UV');
-    if (a_UV < 0) {
-        console.log("Failed to get the storage location of a_UV");
-        return;
-    }
-
-    u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
-    if (!u_FragColor) {
-        console.log("Failed to get the storage location of u_FragColor");
-        return;
-    }
-
-    u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
-    if (!u_ModelMatrix) {
-        console.log("Failed to get the storage location of u_ModelMatrix");
-        return;
-    }
-
-    u_GlobalRotateMatrix = gl.getUniformLocation(gl.program, 'u_GlobalRotateMatrix');
-    if (!u_GlobalRotateMatrix) {
-        console.log("Failed to get the storage location of u_GlobalRotateMatrix");
-        return;
-    }
-
-    u_Sampler0 = gl.getUniformLocation(gl.program, 'u_Sampler0');
-    if (!u_Sampler0) {
-        console.log("Failed to get the storage location of u_Sampler0");
-        return;
-    }
-
-    u_whichTexture = gl.getUniformLocation(gl.program, 'u_whichTexture');
-    if (!u_whichTexture) {
-        console.log("Failed to get the storage location of u_whichTexture");
-        return;
-    }
+    u_FragColor = getUniform('u_FragColor');
+    u_ModelMatrix = getUniform('u_ModelMatrix');
+    u_GlobalRotateMatrix = getUniform('u_GlobalRotateMatrix');
+    u_Sampler0 = getUniform('u_Sampler0');
+    u_whichTexture = getUniform('u_whichTexture');
 
     // Provide default values
     gl.vertexAttrib3f(a_Position, 0.0, 0.0, 0.0);
 
     let identityMatrix = new Matrix4();
     gl.uniformMatrix4fv(u_ModelMatrix, false, identityMatrix.elements);
+
+    function getAttrib(name) {
+        let attribVar = gl.getAttribLocation(gl.program, name);
+        if (attribVar < 0) {
+            console.log("Failed to get the storage location of " + name);
+            return null;
+        } else {
+            return attribVar;
+        }
+    }
+
+    function getUniform(name) {
+        let uniformVar = gl.getUniformLocation(gl.program, name);
+        if (!uniformVar) {
+            console.log("Failed to get the storage location of " + name);
+            return null;
+        } else {
+            return uniformVar;
+        }
+    }
 }
 
 function addActionsForHTMLUI() {
@@ -296,16 +283,19 @@ function renderAllShapes() {
     root.matrix.translate(0, 0, 0);
     root.matrix.scale(1, 1, 1);
 
-    let one = new Pyramid4(root);
+    let one = new Cube(root);
     one.setColorHex("ffcc00ff");
     one.setShadingIntensity(0.25);
     one.matrix.scale(0.5, 0.5, 0.5);
     one.render();
 
-    let two = new Octahedron(root);
+    let two = new Cube(root);
     two.setColorHex("ffcc00ff");
     two.setShadingIntensity(0.25);
-    two.matrix.scale(0.5, 0.5, 0.5);
+    two.setTextureType(-1);
+    two.matrix.translate(0.5, 0, 0);
+    two.matrix.rotate(45, 0, 0, 1);
+    two.matrix.scale(0.2, 0.2, 0.2);
     two.render();
 
     updatePerformanceDebug(startTime, performance.now());
