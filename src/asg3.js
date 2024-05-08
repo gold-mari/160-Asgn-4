@@ -61,8 +61,8 @@ let g_dragStartAngle = [0, 0];
 let g_dragStartMousePos = [0, 0];
 
 let g_View = {
-    eye: new Vector3([0,0,3]),
-    at: new Vector3([0,0,-100]),
+    eye: new Vector3([3,0,-3]),
+    at: new Vector3([-100,0,100]),
     up: new Vector3([0,1,0])
 };
 
@@ -86,9 +86,9 @@ function main() {
     addActionsForHTMLUI();
 
     // Register function (event handler) to be called on a mouse press
-    canvas.onmousedown = function(ev) { click(ev, true) };
-    // If the mouse is down, draw.
-    canvas.onmousemove = function(ev) { if(ev.buttons == 1) { click(ev, false); } };
+    // canvas.onmousedown = function(ev) { click(ev, true) };
+
+    document.onkeydown = keydown;
 
     // Specify the color for clearing <canvas>
     gl.clearColor(0, 0, 0, 1);
@@ -247,19 +247,56 @@ function clearCanvas() {
 // Event callback methods
 // ================================================================
 
-function click(ev, dragStart) {
+// function click(ev, dragStart) {
 
-    // Extract the event click and convert to WebGL canvas space
-    let [x, y] = coordinatesEventToGLSpace(ev);
+//     // Extract the event click and convert to WebGL canvas space
+//     let [x, y] = coordinatesEventToGLSpace(ev);
 
-    if (dragStart) {
-        g_dragStartAngle = [g_globalAngle[0], g_globalAngle[1]];
-        g_dragStartMousePos = [x, y]
+//     if (dragStart) {
+//         g_dragStartAngle = [g_globalAngle[0], g_globalAngle[1]];
+//         g_dragStartMousePos = [x, y]
+//     }
+
+//     g_globalAngle[0] = g_dragStartAngle[0] + ((x - g_dragStartMousePos[0]) * -180);
+//     g_globalAngle[1] = g_dragStartAngle[1] + ((y - g_dragStartMousePos[1]) * 180);
+//     renderAllShapes();
+// }
+
+function keydown(ev) {
+    // Get our 'step' vector, a normalized vector pointed from where 
+    // we are to where we're looking.
+    let step = new Vector3(g_View.at);
+    step.sub(g_View.eye);
+    step.normalize();
+    step.mul(0.1);
+
+    switch (ev.keyCode) {
+        case 87: {  // "W", move forward
+            g_View.eye.add(step);
+            g_View.at.add(step);
+            break;
+        }
+        case 65: {  // "A", move left
+            let left = Vector3.cross(step, g_View.up);
+            g_View.eye.add(left);
+            g_View.at.add(left);
+            break;
+        }
+        case 83: {  // "S", move backward
+            g_View.eye.sub(step);
+            g_View.at.sub(step);
+            break;
+        }
+        case 68: {  // "D", move right
+            let right = Vector3.cross(step, g_View.up);
+            g_View.eye.sub(right);
+            g_View.at.sub(right);
+            break
+        }
     }
 
-    g_globalAngle[0] = g_dragStartAngle[0] + ((x - g_dragStartMousePos[0]) * -180);
-    g_globalAngle[1] = g_dragStartAngle[1] + ((y - g_dragStartMousePos[1]) * 180);
     renderAllShapes();
+    console.log(ev.keyCode);
 }
 
 // ================================================================

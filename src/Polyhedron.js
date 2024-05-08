@@ -32,7 +32,7 @@ class Polyhedron {
         // -1: UV debug color
         // 0: texture0
         // The polyhedron will be rendered yellow if textureType is none of these.
-        //
+
         // If UVs aren't implemented, default to the frag color.
         if (this.uvsImplemented()) {
             this.textureType = num;
