@@ -54,12 +54,21 @@ class Polyhedron {
             
             gl.uniform4f(u_FragColor, this.color.r*falloff, this.color.g*falloff, this.color.b*falloff, 1);
 
-            Triangle.drawTriangle3D(triangles[i]);
+            if (this.uvsImplemented()) {
+                Triangle.drawTriangle3DUV(triangles[i][0], triangles[i][1]);
+            } else {
+                Triangle.drawTriangle3D(triangles[i]);
+            }
+            
         }
     }
 
     getTriangles() {
         return Polyhedron.triangles;
+    }
+
+    uvsImplemented() {
+        return false;
     }
 
     static triangles = [];

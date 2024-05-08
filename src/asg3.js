@@ -4,26 +4,31 @@
 
 // Vertex shader program
 var VSHADER_SOURCE = `
+    precision mediump float;
     attribute vec4 a_Position;
+    attribute vec2 a_UV;
+    varying vec2 v_UV;
     uniform mat4 u_ModelMatrix;
     uniform mat4 u_GlobalRotateMatrix;
-    uniform mat4 u_GlobalScaleMatrix;
     void main() {
-        gl_Position = u_GlobalScaleMatrix * u_GlobalRotateMatrix * u_ModelMatrix * a_Position;
+        gl_Position = u_GlobalRotateMatrix * u_ModelMatrix * a_Position;
+        v_UV = a_UV;
     }`;
 
 // Fragment shader program
 var FSHADER_SOURCE = `
     precision mediump float;
+    varying vec2 v_UV;
     uniform vec4 u_FragColor;
     void main() {
         gl_FragColor = u_FragColor;
+        gl_FragColor = vec4(v_UV, 1, 1);
     }`;
 
 let canvas;
 let gl;
-let penColorPreviewDiv;
 let a_Position;
+let a_UV;
 let u_FragColor;
 let u_ModelMatrix;
 let u_GlobalRotateMatrix;
@@ -58,12 +63,6 @@ function main() {
     canvas.onmousedown = function(ev) { click(ev, true) };
     // If the mouse is down, draw.
     canvas.onmousemove = function(ev) { if(ev.buttons == 1) { click(ev, false); } };
-
-    // Register function to be called on mouse scroll
-    canvas.addEventListener('wheel', function(event){
-        scroll(event);
-        event.preventDefault();
-    }, false);
 
     // Specify the color for clearing <canvas>
     gl.clearColor(0, 0, 0, 1);
@@ -119,27 +118,27 @@ function connectVariablesToGLSL() {
         return;
     }
 
+    a_UV = gl.getAttribLocation(gl.program, 'a_UV');
+    if (a_UV < 0) {
+        console.log("Failed to get the storage location of a_UV");
+        return;
+    }
+
     u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
     if (!u_FragColor) {
-        console.log("Failed to get u_FragColor variable");
+        console.log("Failed to get the storage location of u_FragColor");
         return;
     }
 
     u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
     if (!u_ModelMatrix) {
-        console.log("Failed to get u_ModelMatrix variable");
+        console.log("Failed to get the storage location of u_ModelMatrix");
         return;
     }
 
     u_GlobalRotateMatrix = gl.getUniformLocation(gl.program, 'u_GlobalRotateMatrix');
     if (!u_GlobalRotateMatrix) {
-        console.log("Failed to get u_GlobalRotateMatrix variable");
-        return;
-    }
-
-    u_GlobalScaleMatrix = gl.getUniformLocation(gl.program, 'u_GlobalScaleMatrix');
-    if (!u_GlobalScaleMatrix) {
-        console.log("Failed to get u_GlobalScaleMatrix variable");
+        console.log("Failed to get the storage location of u_GlobalRotateMatrix");
         return;
     }
 
@@ -193,10 +192,6 @@ function click(ev, dragStart) {
     renderAllShapes();
 }
 
-function scroll(ev) {
-    g_globalScale = Math.max(0, g_globalScale + Number(-ev.deltaY*0.001))
-}
-
 // ================================================================
 // Render methods
 // ================================================================
@@ -223,9 +218,6 @@ function renderAllShapes() {
     globalRotationMatrix.rotate(g_globalAngle[0], 0, 1, 0);
     globalRotationMatrix.rotate(g_globalAngle[1], 1, 0, 0);
     gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, globalRotationMatrix.elements);
-    let globalScaleMatrix = new Matrix4();
-    globalScaleMatrix.scale(g_globalScale, g_globalScale, g_globalScale);
-    gl.uniformMatrix4fv(u_GlobalScaleMatrix, false, globalScaleMatrix.elements);
 
     // Clear <canvas>
     clearCanvas();
@@ -234,7 +226,7 @@ function renderAllShapes() {
     root.matrix.translate(0, 0, 0);
     root.matrix.scale(1, 1, 1);
 
-    let orb = new Icosahedron(root);
+    let orb = new Cube(root);
     orb.setColorHex("ffcc00ff");
     orb.setShadingIntensity(0.25);
     orb.matrix.scale(0.5, 0.5, 0.5);
