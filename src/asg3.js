@@ -168,7 +168,6 @@ function connectVariablesToGLSL() {
     u_GlobalRotateMatrix = getUniform('u_GlobalRotateMatrix');
     u_ViewMatrix = getUniform('u_ViewMatrix');
     u_ProjectionMatrix = getUniform('u_ProjectionMatrix');; 
-    u_Sampler0 = getUniform('u_Sampler0');
     u_whichTexture = getUniform('u_whichTexture');
 
     // Provide default values
@@ -200,7 +199,7 @@ function connectVariablesToGLSL() {
 
 function addActionsForHTMLUI() {
     // Initialize dynamic text
-    sendTextTOHTML("placeholderLabel", `Right Upper Roll (current: ${g_placeholderSlider})`);
+    sendTextTOHTML("placeholderLabel", `Placeholder Slider (current: ${g_placeholderSlider})`);
     
     // Placeholder button
     let placeholderButton = document.getElementById("placeholderButton");
