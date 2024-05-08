@@ -23,6 +23,9 @@ var FSHADER_SOURCE = `
     varying vec2 v_UV;
     uniform vec4 u_FragColor;
     uniform sampler2D u_Sampler0;
+    uniform sampler2D u_Sampler1;
+    uniform sampler2D u_Sampler2;
+    uniform sampler2D u_Sampler3;
 
     uniform int u_whichTexture;
 
@@ -36,6 +39,15 @@ var FSHADER_SOURCE = `
         } else if (u_whichTexture == 0) {
             // Use texture0
             gl_FragColor = texture2D(u_Sampler0, v_UV);
+        } else if (u_whichTexture == 1) {
+            // Use texture1
+            gl_FragColor = texture2D(u_Sampler1, v_UV);
+        } else if (u_whichTexture == 2) {
+            // Use texture0
+            gl_FragColor = texture2D(u_Sampler2, v_UV);
+        } else if (u_whichTexture == 3) {
+            // Use texture1
+            gl_FragColor = texture2D(u_Sampler3, v_UV);
         } else {
             // Error: Use yellow to indicate missing texture
             gl_FragColor = vec4(1, 1, 0, 1);
@@ -51,7 +63,17 @@ let u_ViewMatrix;
 let u_ProjectionMatrix;
 let a_UV;
 let u_FragColor;
-let u_Sampler0;
+
+let g_textureSources = [
+    '../resources/horse.png',
+    '../resources/dylan.png',
+    '../resources/grass.png',
+    '../resources/sky.png',
+];
+let u_Samplers = [];
+let g_Textures = [];
+
+
 let u_whichTexture;
 
 let g_placeholderSlider = -10;
@@ -196,34 +218,39 @@ function addActionsForHTMLUI() {
 }
 
 function initTextures() {
-    var image = new Image();  // Create the image object
-    if (!image) {
-      console.log('Failed to create the image object');
-      return false;
-    }
-    
-    // Register the event handler to be called on loading an image
-    image.onload = function(){ sendImageToTEXTURE0(image); };
-    // Tell the browser to load an image
-    image.src = '../resources/horse.png';
-  
-    // Add more texture loading
+    for (let i = 0; i < g_textureSources.length; i++) {
+        let image = new Image();  // Create the image object
+        if (!image) {
+        console.log('Failed to create the image object');
+        return false;
+        }
 
+        var texture = gl.createTexture();   // Create a texture object
+        if (!texture) {
+            console.log('Failed to create the texture object');
+            return false;
+        } else {
+            g_Textures.push(texture);
+        }
+
+        // Register the event handler to be called on loading an image
+        image.onload = function(){ sendImageToTEXTURE(i, image); };
+        // Tell the browser to load an image
+        image.src = g_textureSources[i];
+    };
+  
     return true;
 }
   
-function sendImageToTEXTURE0(image) {
-    var texture = gl.createTexture();   // Create a texture object
-    if (!texture) {
-      console.log('Failed to create the texture object');
-      return false;
-    }
+function sendImageToTEXTURE(index, image) {
+
+    var u_Sampler = gl.getUniformLocation(gl.program, `u_Sampler${index}`);
 
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1); // Flip the image's y axis
     // Enable texture unit0
-    gl.activeTexture(gl.TEXTURE0);
+    gl.activeTexture(gl[`TEXTURE${index}`]);
     // Bind the texture object to the target
-    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.bindTexture(gl.TEXTURE_2D, g_Textures[index]);
   
     // Set the texture parameters
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -231,11 +258,14 @@ function sendImageToTEXTURE0(image) {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
     
     // Set the texture unit 0 to the sampler
-    gl.uniform1i(u_Sampler0, 0);
+    gl.uniform1i(u_Sampler, index);
     
     gl.clear(gl.COLOR_BUFFER_BIT);   // Clear <canvas>
   
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 0); // Draw the rectangle
+
+    // Add the filled out sampler to our sampler list
+    u_Samplers.push(u_Sampler);
 }
 
 function clearCanvas() {
@@ -280,7 +310,6 @@ function keydown(ev) {
         if ([81, 69].includes(ev.keyCode)) { // If the movement is a rotation (is Q/E)...
             radius = Math.sqrt(Math.pow(step.elements[0], 2) + Math.pow(step.elements[0], 2));
             radians = Math.atan2(step.elements[2], step.elements[0]);
-            // console.log(`radius - ${radius}\nradians - ${radians}`);
         }
     }
 
@@ -325,7 +354,6 @@ function keydown(ev) {
     }
 
     renderAllShapes();
-    console.log(ev.keyCode);
 }
 
 // ================================================================
@@ -391,11 +419,22 @@ function renderAllShapes() {
     let two = new Cube(root);
     two.setColorHex("ffcc00ff");
     two.setShadingIntensity(0.25);
-    two.setTextureType(-1);
+    two.setTextureType(1);
     two.matrix.translate(0.5, 0, 0);
     two.matrix.rotate(45, 1, 1, 1);
     two.matrix.scale(0.2, 0.2, 0.2);
     two.render();
+
+    let sky = new Cube(root);
+    sky.setTextureType(3);
+    sky.matrix.scale(20, 20, 20);
+    sky.render();
+
+    let grass = new Cube(root);
+    grass.setTextureType(2);
+    grass.matrix.translate(0, -1, 0);
+    grass.matrix.scale(20, 0, 20);
+    grass.render();
 
     updatePerformanceDebug(startTime, performance.now());
 }
