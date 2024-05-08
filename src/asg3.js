@@ -10,8 +10,10 @@ var VSHADER_SOURCE = `
     varying vec2 v_UV;
     uniform mat4 u_ModelMatrix;
     uniform mat4 u_GlobalRotateMatrix;
+    uniform mat4 u_ViewMatrix;
+    uniform mat4 u_ProjectionMatrix;
     void main() {
-        gl_Position = u_GlobalRotateMatrix * u_ModelMatrix * a_Position;
+        gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_GlobalRotateMatrix * u_ModelMatrix * a_Position;
         v_UV = a_UV;
     }`;
 
@@ -43,10 +45,12 @@ var FSHADER_SOURCE = `
 let canvas;
 let gl;
 let a_Position;
-let a_UV;
-let u_FragColor;
 let u_ModelMatrix;
 let u_GlobalRotateMatrix;
+let u_ViewMatrix;
+let u_ProjectionMatrix;
+let a_UV;
+let u_FragColor;
 let u_Sampler0;
 let u_whichTexture;
 
@@ -54,7 +58,14 @@ let g_placeholderSlider = -10;
 
 let g_globalAngle = [0, 0];
 let g_dragStartAngle = [0, 0];
-let g_dragStartMousePos = [0, 0]
+let g_dragStartMousePos = [0, 0];
+
+let g_View = {
+    eye: new Vector3([0,0,3]),
+    at: new Vector3([0,0,-100]),
+    up: new Vector3([0,1,0])
+};
+
 let g_shapesList = [];
 
 let g_startTime = 0;
@@ -133,6 +144,8 @@ function connectVariablesToGLSL() {
     u_FragColor = getUniform('u_FragColor');
     u_ModelMatrix = getUniform('u_ModelMatrix');
     u_GlobalRotateMatrix = getUniform('u_GlobalRotateMatrix');
+    u_ViewMatrix = getUniform('u_ViewMatrix');
+    u_ProjectionMatrix = getUniform('u_ProjectionMatrix');; 
     u_Sampler0 = getUniform('u_Sampler0');
     u_whichTexture = getUniform('u_whichTexture');
 
@@ -167,13 +180,13 @@ function addActionsForHTMLUI() {
     // Initialize dynamic text
     sendTextTOHTML("placeholderLabel", `Right Upper Roll (current: ${g_placeholderSlider})`);
     
-    // Camera angle
+    // Placeholder button
     let placeholderButton = document.getElementById("placeholderButton");
     placeholderButton.addEventListener("mousedown", function() {
         g_globalAngle = [0, 0];
     });
 
-    // Right arm
+    // Placeholder slider
     let placeholder = document.getElementById("placeholder");
     placeholder.addEventListener("input", function() {
         sendTextTOHTML("placeholderLabel", `Right Upper Roll (current: ${this.value})`);
@@ -270,6 +283,26 @@ function renderAllShapes() {
     // Store the time at the start of this function.
     let startTime = performance.now();
 
+    // Pass in the projection matrix
+    let projectionMatrix = new Matrix4();
+    projectionMatrix.setPerspective(
+        50,                         // FOV
+        canvas.width/canvas.height, // aspect
+        0.1,                        // near
+        100                         // far
+    );
+    gl.uniformMatrix4fv(u_ProjectionMatrix, false, projectionMatrix.elements);
+
+    // Pass in the view matrix
+    let viewMatrix = new Matrix4();
+    viewMatrix.setLookAt(
+        ...g_View.eye.elements, // eye
+        ...g_View.at.elements,  // at
+        ...g_View.up.elements   // up
+    );
+
+    gl.uniformMatrix4fv(u_ViewMatrix, false, viewMatrix.elements);
+
     // Pass in the global angle and scale matrix
     let globalRotationMatrix = new Matrix4();
     globalRotationMatrix.rotate(g_globalAngle[0], 0, 1, 0);
@@ -294,7 +327,7 @@ function renderAllShapes() {
     two.setShadingIntensity(0.25);
     two.setTextureType(-1);
     two.matrix.translate(0.5, 0, 0);
-    two.matrix.rotate(45, 0, 0, 1);
+    two.matrix.rotate(45, 1, 1, 1);
     two.matrix.scale(0.2, 0.2, 0.2);
     two.render();
 
