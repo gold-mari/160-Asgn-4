@@ -263,12 +263,23 @@ function clearCanvas() {
 // }
 
 function keydown(ev) {
-    // Get our 'step' vector, a normalized vector pointed from where 
-    // we are to where we're looking.
-    let step = new Vector3(g_View.at);
-    step.sub(g_View.eye);
-    step.normalize();
-    step.mul(0.1);
+    let step;
+    let radius, radians;
+
+    if ([87, 65, 83, 68, 81, 69].includes(ev.keyCode)) { // If the movement is valid...
+        // Get our 'step' vector, a normalized vector pointed from where 
+        // we are to where we're looking.
+        baseAt = new Vector3(g_View.at);
+        step = new Vector3(g_View.at);
+        step.sub(g_View.eye);
+        step.normalize();
+        step.mul(0.1);
+        if ([81, 69].includes(ev.keyCode)) { // If the movement is a rotation (is Q/E)...
+            radius = Math.sqrt(Math.pow(step.elements[0], 2) + Math.pow(step.elements[0], 2));
+            radians = Math.atan2(step.elements[2], step.elements[0]);
+            // console.log(`radius - ${radius}\nradians - ${radians}`);
+        }
+    }
 
     switch (ev.keyCode) {
         case 87: {  // "W", move forward
@@ -278,8 +289,8 @@ function keydown(ev) {
         }
         case 65: {  // "A", move left
             let left = Vector3.cross(step, g_View.up);
-            g_View.eye.add(left);
-            g_View.at.add(left);
+            g_View.eye.sub(left);
+            g_View.at.sub(left);
             break;
         }
         case 83: {  // "S", move backward
@@ -289,9 +300,33 @@ function keydown(ev) {
         }
         case 68: {  // "D", move right
             let right = Vector3.cross(step, g_View.up);
-            g_View.eye.sub(right);
-            g_View.at.sub(right);
+            g_View.eye.add(right);
+            g_View.at.add(right);
             break
+        }
+        case 81: { // "Q", turn counterclockwise
+            turnVector = new Vector3([
+                radius * Math.cos(radians - 0.02),
+                0,
+                radius * Math.sin(radians - 0.02)
+            ]);
+
+            console.log(g_View.eye);
+            g_View.at.set(g_View.eye);
+            g_View.at.add(turnVector);
+            break;
+        }
+        case 69: { // "E", turn clockwise
+            turnVector = new Vector3([
+                radius * Math.cos(radians + 0.02),
+                0,
+                radius * Math.sin(radians + 0.02)
+            ]);
+
+            console.log(g_View.eye);
+            g_View.at.set(g_View.eye);
+            g_View.at.add(turnVector);
+            break;
         }
     }
 
