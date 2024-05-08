@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Assignment 3A</title>
+    </head>
+ 
+    <body style="background:#aaf6f6" onload="main()">
+        <canvas id="webgl" width="400" height="400">
+            Please use the browser supporting "canvas".
+        </canvas>
+
+        <p><strong>Drag to pan. Scroll to zoom.</strong></p>
+        <p id="performance">Begin drawing to see performance data!</p>
+
+        <hr>
+
+        <form>
+            <input id="placeholderButton" name="placeholderButton" type="button" value="Placeholder Button">
+
+            <br><br>
+
+            <label for="placeholder"><strong>
+                <div id="placeholderLabel">Placeholder Slider</div>
+            </strong></label>
+            <input id="placeholder" name="placeholder" type="range" class="slider" min="-60" max="20" value="-10">
+        </form>
+            
+        <script src="../lib/webgl-utils.js"></script>
+        <script src="../lib/webgl-debug.js"></script>
+        <script src="../lib/cuon-utils.js"></script>
+        <script src="../lib/cuon-matrix.js"></script>
+        <script src="Triangle.js"></script>
+        <script src="Polyhedron.js"></script>
+        <script src="Cube.js"></script>
+        <script src="Pyramid4.js"></script>
+        <script src="Octahedron.js"></script>
+        <script src="Icosahedron.js"></script>
+        <script src="asg3.js"></script>
+    </body>
+</html>
