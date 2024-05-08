@@ -12,6 +12,9 @@ class Polyhedron {
             a: 1.0
         };
 
+        this.textureType = undefined;
+        this.setTextureType(0);
+
         if (!parent) {
             this.matrix = new Matrix4();
         } else {
@@ -22,6 +25,21 @@ class Polyhedron {
 
     setColor(r, g, b, a) {
         this.color = {r, g, b, a};
+    }
+
+    setTextureType(num) {
+        // -2: Fragment color
+        // -1: UV debug color
+        // 0: texture0
+        // The polyhedron will be rendered yellow if textureType is none of these.
+        //
+        // If UVs aren't implemented, default to the frag color.
+        if (this.uvsImplemented()) {
+            this.textureType = num;
+        } else {
+            this.textureType = -2; 
+        }
+        
     }
 
     setColorHex(hex) {
@@ -43,6 +61,8 @@ class Polyhedron {
     render() {
         // Pass the model matrix to u_ModelMatrix attribute
         gl.uniformMatrix4fv(u_ModelMatrix, false, this.matrix.elements);
+        // Pass in the texture type.
+        gl.uniform1i(u_whichTexture, this.textureType);
 
         // Pass the color of a point to u_FragColor variable
         let triangles = this.getTriangles();

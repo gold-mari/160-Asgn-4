@@ -20,9 +20,24 @@ var FSHADER_SOURCE = `
     precision mediump float;
     varying vec2 v_UV;
     uniform vec4 u_FragColor;
+    uniform sampler2D u_Sampler0;
+
+    uniform int u_whichTexture;
+
     void main() {
-        gl_FragColor = u_FragColor;
-        gl_FragColor = vec4(v_UV, 1, 1);
+        if (u_whichTexture == -2) {
+            // Use fragment color
+            gl_FragColor = u_FragColor;
+        } else if (u_whichTexture == -1) {
+            // Use UV debug color
+            gl_FragColor = vec4(v_UV, 1, 1);
+        } else if (u_whichTexture == 0) {
+            // Use texture0
+            gl_FragColor = texture2D(u_Sampler0, v_UV);
+        } else {
+            // Error: Use yellow to indicate missing texture
+            gl_FragColor = vec4(1, 1, 0, 1);
+        }
     }`;
 
 let canvas;
@@ -32,12 +47,12 @@ let a_UV;
 let u_FragColor;
 let u_ModelMatrix;
 let u_GlobalRotateMatrix;
-let u_GlobalScaleMatrix;
+let u_Sampler0;
+let u_whichTexture;
 
 let g_placeholderSlider = -10;
 
 let g_globalAngle = [0, 0];
-let g_globalScale = 1;
 let g_dragStartAngle = [0, 0];
 let g_dragStartMousePos = [0, 0]
 let g_shapesList = [];
@@ -67,8 +82,8 @@ function main() {
     // Specify the color for clearing <canvas>
     gl.clearColor(0, 0, 0, 1);
 
-    // Clear <canvas>
-    renderAllShapes();
+    // Initialize textures
+    initTextures();
 
     g_startTime = performance.now()/1000;
     requestAnimationFrame(tick);
@@ -142,6 +157,18 @@ function connectVariablesToGLSL() {
         return;
     }
 
+    u_Sampler0 = gl.getUniformLocation(gl.program, 'u_Sampler0');
+    if (!u_Sampler0) {
+        console.log("Failed to get the storage location of u_Sampler0");
+        return;
+    }
+
+    u_whichTexture = gl.getUniformLocation(gl.program, 'u_whichTexture');
+    if (!u_whichTexture) {
+        console.log("Failed to get the storage location of u_whichTexture");
+        return;
+    }
+
     // Provide default values
     gl.vertexAttrib3f(a_Position, 0.0, 0.0, 0.0);
 
@@ -166,6 +193,49 @@ function addActionsForHTMLUI() {
         g_placeholderSlider = this.value;
         renderAllShapes();
     });
+}
+
+function initTextures() {
+    var image = new Image();  // Create the image object
+    if (!image) {
+      console.log('Failed to create the image object');
+      return false;
+    }
+    
+    // Register the event handler to be called on loading an image
+    image.onload = function(){ sendImageToTEXTURE0(image); };
+    // Tell the browser to load an image
+    image.src = '../resources/horse.png';
+  
+    // Add more texture loading
+
+    return true;
+}
+  
+function sendImageToTEXTURE0(image) {
+    var texture = gl.createTexture();   // Create a texture object
+    if (!texture) {
+      console.log('Failed to create the texture object');
+      return false;
+    }
+
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1); // Flip the image's y axis
+    // Enable texture unit0
+    gl.activeTexture(gl.TEXTURE0);
+    // Bind the texture object to the target
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+  
+    // Set the texture parameters
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    // Set the texture image
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+    
+    // Set the texture unit 0 to the sampler
+    gl.uniform1i(u_Sampler0, 0);
+    
+    gl.clear(gl.COLOR_BUFFER_BIT);   // Clear <canvas>
+  
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 0); // Draw the rectangle
 }
 
 function clearCanvas() {
@@ -226,11 +296,17 @@ function renderAllShapes() {
     root.matrix.translate(0, 0, 0);
     root.matrix.scale(1, 1, 1);
 
-    let orb = new Cube(root);
-    orb.setColorHex("ffcc00ff");
-    orb.setShadingIntensity(0.25);
-    orb.matrix.scale(0.5, 0.5, 0.5);
-    orb.render();
+    let one = new Pyramid4(root);
+    one.setColorHex("ffcc00ff");
+    one.setShadingIntensity(0.25);
+    one.matrix.scale(0.5, 0.5, 0.5);
+    one.render();
+
+    let two = new Octahedron(root);
+    two.setColorHex("ffcc00ff");
+    two.setShadingIntensity(0.25);
+    two.matrix.scale(0.5, 0.5, 0.5);
+    two.render();
 
     updatePerformanceDebug(startTime, performance.now());
 }
