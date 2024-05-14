@@ -9,11 +9,10 @@ var VSHADER_SOURCE = `
     attribute vec2 a_UV;
     varying vec2 v_UV;
     uniform mat4 u_ModelMatrix;
-    uniform mat4 u_GlobalRotateMatrix;
     uniform mat4 u_ViewMatrix;
     uniform mat4 u_ProjectionMatrix;
     void main() {
-        gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_GlobalRotateMatrix * u_ModelMatrix * a_Position;
+        gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_ModelMatrix * a_Position;
         v_UV = a_UV;
     }`;
 
@@ -58,7 +57,6 @@ let canvas;
 let gl;
 let a_Position;
 let u_ModelMatrix;
-let u_GlobalRotateMatrix;
 let u_ViewMatrix;
 let u_ProjectionMatrix;
 let a_UV;
@@ -78,15 +76,10 @@ let u_whichTexture;
 
 let g_placeholderSlider = -10;
 
-let g_globalAngle = [0, 0];
 let g_dragStartAngle = [0, 0];
 let g_dragStartMousePos = [0, 0];
 
-let g_View = {
-    eye: new Vector3([3,0,-3]),
-    at: new Vector3([-100,0,100]),
-    up: new Vector3([0,1,0])
-};
+let g_Camera = undefined;
 
 let g_shapesList = [];
 
@@ -106,6 +99,13 @@ function main() {
 
     // Set up actions for the HTML UI elements
     addActionsForHTMLUI();
+
+    g_Camera = new Camera(canvas, {
+        fov: 50,
+        eye: new Vector3([3,0,-3]),
+        at: new Vector3([-100,0,100]),
+        up: new Vector3([0,1,0])
+    })
 
     // Register function (event handler) to be called on a mouse press
     // canvas.onmousedown = function(ev) { click(ev, true) };
@@ -165,7 +165,6 @@ function connectVariablesToGLSL() {
 
     u_FragColor = getUniform('u_FragColor');
     u_ModelMatrix = getUniform('u_ModelMatrix');
-    u_GlobalRotateMatrix = getUniform('u_GlobalRotateMatrix');
     u_ViewMatrix = getUniform('u_ViewMatrix');
     u_ProjectionMatrix = getUniform('u_ProjectionMatrix');; 
     u_whichTexture = getUniform('u_whichTexture');
@@ -204,7 +203,7 @@ function addActionsForHTMLUI() {
     // Placeholder button
     let placeholderButton = document.getElementById("placeholderButton");
     placeholderButton.addEventListener("mousedown", function() {
-        g_globalAngle = [0, 0];
+        console.log("Clicked");
     });
 
     // Placeholder slider
@@ -292,65 +291,15 @@ function clearCanvas() {
 // }
 
 function keydown(ev) {
-    let step;
-    let radius, radians;
-    
-    let movementScale = 0.1;
-    let rotationScale = 0.02;
 
-    if ([87, 65, 83, 68, 81, 69].includes(ev.keyCode)) { // If the movement is valid...
-        // Get our 'step' vector, a normalized vector pointed from where 
-        // we are to where we're looking.
-        baseAt = new Vector3(g_View.at);
-        step = new Vector3(g_View.at);
-        step.sub(g_View.eye);
-        step.normalize();
-        step.mul(movementScale);
-        if ([81, 69].includes(ev.keyCode)) { // If the movement is a rotation (is Q/E)...
-            radius = Math.sqrt(Math.pow(step.elements[0], 2) + Math.pow(step.elements[2], 2));
-            radians = Math.atan2(step.elements[2], step.elements[0]);
-        }
-    }
+    if (ev.keyCode == 87) g_Camera.moveForward();
+    if (ev.keyCode == 83) g_Camera.moveBackward();
 
-    if (ev.keyCode == 87 || ev.keyCode == 83) {
-        if (ev.keyCode == 87) {  // "W", move forward
-            g_View.eye.add(step);
-            g_View.at.add(step);
-        } else { // "S", move backward
-            g_View.eye.sub(step);
-            g_View.at.sub(step);
-        }
-    }
+    if (ev.keyCode == 65) g_Camera.moveLeft();
+    if (ev.keyCode == 68) g_Camera.moveRight();
 
-    if (ev.keyCode == 65 || ev.keyCode == 68) {
-        let right = Vector3.cross(step, g_View.up);
-        if (ev.keyCode == 65) {  // "A", move left
-            g_View.eye.sub(right);
-            g_View.at.sub(right);
-        } else { // "D", move right
-            g_View.eye.add(right);
-            g_View.at.add(right);
-        }
-    }
-
-    if (ev.keyCode == 81 || ev.keyCode == 69) {
-        let newRadians;
-
-        if (ev.keyCode == 81) {  // "Q", turn counterclockwise
-            newRadians = radians - rotationScale;
-        } else { // "D", move right
-            newRadians = radians + rotationScale;
-        }
-
-        turnVector = new Vector3([
-            radius * Math.cos(newRadians),
-            0,
-            radius * Math.sin(newRadians)
-        ]);
-
-        g_View.at.set(g_View.eye);
-        g_View.at.add(turnVector);
-    }
+    if (ev.keyCode == 81) g_Camera.panLeft();
+    if (ev.keyCode == 69) g_Camera.panRight();
 
     renderAllShapes();
 }
@@ -376,31 +325,10 @@ function renderAllShapes() {
     // Store the time at the start of this function.
     let startTime = performance.now();
 
-    // Pass in the projection matrix
-    let projectionMatrix = new Matrix4();
-    projectionMatrix.setPerspective(
-        50,                         // FOV
-        canvas.width/canvas.height, // aspect
-        0.1,                        // near
-        100                         // far
-    );
-    gl.uniformMatrix4fv(u_ProjectionMatrix, false, projectionMatrix.elements);
-
-    // Pass in the view matrix
-    let viewMatrix = new Matrix4();
-    viewMatrix.setLookAt(
-        ...g_View.eye.elements, // eye
-        ...g_View.at.elements,  // at
-        ...g_View.up.elements   // up
-    );
-
-    gl.uniformMatrix4fv(u_ViewMatrix, false, viewMatrix.elements);
-
-    // Pass in the global angle and scale matrix
-    let globalRotationMatrix = new Matrix4();
-    globalRotationMatrix.rotate(g_globalAngle[0], 0, 1, 0);
-    globalRotationMatrix.rotate(g_globalAngle[1], 1, 0, 0);
-    gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, globalRotationMatrix.elements);
+    // Update our camera.
+    g_Camera.recalculateMatrices();
+    gl.uniformMatrix4fv(u_ProjectionMatrix, false, g_Camera.projectionMatrix.elements);
+    gl.uniformMatrix4fv(u_ViewMatrix, false, g_Camera.viewMatrix.elements);
 
     // Clear <canvas>
     clearCanvas();
