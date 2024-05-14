@@ -307,7 +307,7 @@ function keydown(ev) {
         step.normalize();
         step.mul(movementScale);
         if ([81, 69].includes(ev.keyCode)) { // If the movement is a rotation (is Q/E)...
-            radius = Math.sqrt(Math.pow(step.elements[0], 2) + Math.pow(step.elements[0], 2));
+            radius = Math.sqrt(Math.pow(step.elements[0], 2) + Math.pow(step.elements[2], 2));
             radians = Math.atan2(step.elements[2], step.elements[0]);
         }
     }
