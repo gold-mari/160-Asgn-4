@@ -402,8 +402,8 @@ function updatePerformanceDebug(start, end) {
     let duration = end-start;
     sendTextTOHTML("performance",
                         `ms: ${Math.floor(duration)} | ` +
-                        `fps: ${Math.floor(1000/duration)/10} | ` +
-                        `cubes drawn: ${g_cubesDrawn}`);
+                        `fps: ${Math.floor(1000/duration)/10}` +
+                        `<br>cubes drawn: ${g_cubesDrawn}`);
 }
 
 function sendTextTOHTML(htmlID, text) {

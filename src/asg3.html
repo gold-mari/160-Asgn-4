@@ -2,33 +2,42 @@
     <html lang="en">
     <head>
         <meta charset="utf-8" />
+        <link rel="stylesheet" href="asg3.css" />
         <title>Assignment 3B</title>
     </head>
  
-    <body style="background:#111; color:#eee; font-family: Arial, Helvetica, sans-serif;" onload="main()">
-        <canvas id="webgl" width="960" height="540">
-            Please use the browser supporting "canvas".
-        </canvas>
+    <body onload="main()">
+        <div class="panels">
+            <div class="main-panel">
+                <canvas id="webgl" width="1200" height="600">
+                    Please use the browser supporting "canvas".
+                </canvas>
+            </div>
 
-        <p><strong>Last night, you dreamt of being stranded at sea.</strong></p>
-        <p id="performance">Performance goes here.</p>
+            <div class="side-panel">
+                <p><strong>Last night, you dreamt of being stranded at sea. You swam until your arms gave out,
+                    but couldn't find land. Eventually, you swam past the sea and into the inky black sky.
+                </strong></p>
+                <p id="performance">Performance goes here.</p>
 
-        <form>
-            <input id="resetSliders" name="resetSliders" type="button" value="Reset Sliders">
-            <input id="resetCamera" name="resetCamera" type="button" value="Reset Camera">
+                <form>
+                    <input id="resetSliders" name="resetSliders" type="button" value="Reset Sliders">
+                    <input id="resetCamera" name="resetCamera" type="button" value="Reset Camera">
 
-            <br><br>
+                    <br><br>
 
-            <label for="distance"><strong>
-                <div id="distanceLabel">Render Distance</div>
-            </strong></label>
-            <input id="distance" name="distance" type="range" class="slider" min="0" max="100" value="40">
+                    <label for="distance"><strong>
+                        <div id="distanceLabel">Render Distance</div>
+                    </strong></label>
+                    <input id="distance" name="distance" type="range" class="slider" min="0" max="100" value="40">
 
-            <label for="angle"><strong>
-                <div id="angleLabel">Render Angle</div>
-            </strong></label>
-            <input id="angle" name="angle" type="range" class="slider" min="0" max="180" value="70">
-        </form>
+                    <label for="angle"><strong>
+                        <div id="angleLabel">Render Angle</div>
+                    </strong></label>
+                    <input id="angle" name="angle" type="range" class="slider" min="0" max="180" value="70">
+                </form>
+            </div>
+        </div>
             
         <script src="../lib/webgl-utils.js"></script>
         <script src="../lib/webgl-debug.js"></script>
