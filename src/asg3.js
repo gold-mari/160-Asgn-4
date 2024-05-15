@@ -104,8 +104,8 @@ function main() {
 
     g_camera = new Camera(canvas, {
         fov: 50,
-        eye: new Vector3([3,0,-3]),
-        at: new Vector3([-100,0,100]),
+        eye: new Vector3([3,1,-3]),
+        at: new Vector3([-100,1,100]),
         up: new Vector3([0,1,0])
     })
 
@@ -349,6 +349,7 @@ function renderAllShapes() {
 
     let horseCube = new Cube(root);
     horseCube.setColorHex("ffcc00ff");
+    horseCube.matrix.translate(0, 1, 0);
     horseCube.setShadingIntensity(0.25);
     horseCube.matrix.scale(0.5, 0.5, 0.5);
     horseCube.render();
@@ -357,7 +358,7 @@ function renderAllShapes() {
     meCube.setColorHex("ffcc00ff");
     meCube.setShadingIntensity(0.25);
     meCube.setTextureType(1);
-    meCube.matrix.translate(0.5, 0, 0);
+    meCube.matrix.translate(0.5, 1, 0);
     meCube.matrix.rotate(45, 1, 1, 1);
     meCube.matrix.scale(0.2, 0.2, 0.2);
     meCube.render();
@@ -369,7 +370,7 @@ function renderAllShapes() {
 
     let grass = new Cube(root);
     grass.setTextureType(2);
-    grass.matrix.translate(0, -1, 0);
+    grass.matrix.translate(0, 0, 0);
     grass.matrix.scale(32, 0, 32);
     grass.render();
 
@@ -385,7 +386,7 @@ function renderAllShapes() {
 function updatePerformanceDebug(start, end) {
     let duration = end-start;
     sendTextTOHTML("performance",
-                        `ms: ${Math.floor(duration)} | fps: ${Math.floor(10000/duration)/10}`)
+                        `ms: ${Math.floor(duration)} | fps: ${Math.floor(1000/duration)/10}`)
 }
 
 function sendTextTOHTML(htmlID, text) {

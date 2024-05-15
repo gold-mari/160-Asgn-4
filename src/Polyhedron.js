@@ -66,27 +66,19 @@ class Polyhedron {
         // Pass in the fragColor. It's constant, now.
         gl.uniform4f(u_FragColor, this.color.r, this.color.g, this.color.b, 1);
 
-        let triangles = this.getTriangles();
-
-        let allVertices = [];
-        let allUVs = [];
-
-        for (let i = 0; i < triangles.length; i++) {
-            if (this.uvsImplemented()) {
-                allVertices = allVertices.concat(triangles[i][0]);
-                allUVs = allUVs.concat(triangles[i][1]);
-                // Triangle.drawTriangle3D(triangles[i][0]);
-                // Triangle.drawTriangle3DUV(triangles[i][0], triangles[i][1]);
-            } else {
-                console.log(`Polyhedron Error: Missing UV map for ${this.constructor.name}`)
-            }
+        if (!this.uvsImplemented()) {
+            console.log(`Polyhedron Error: Missing UV map for ${this.constructor.name}`)
         }
         
-        Triangle.drawTriangle3DUV(allVertices, allUVs);
+        Triangle.drawTriangle3DUV(this.getVertices(), this.getUVs());
     }
 
-    getTriangles() {
-        return Polyhedron.triangles;
+    getVertices() {
+        return Polyhedron.vertices;
+    }
+
+    getUVs() {
+        return Polyhedron.uvs;
     }
 
     uvsImplemented() {
@@ -94,6 +86,8 @@ class Polyhedron {
     }
 
     static triangles = [];
+    static vertices = [];
+    static uvs = [];
 
     static lerp(start, end, amount) {
         return (1-amount)*start + amount*end;

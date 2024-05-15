@@ -1,10 +1,11 @@
 class CubeMap {
     constructor() {
         this.map = [];
-        for (let x = 0; x < 8; x++) {
+        this.mapSize = [32, 32]
+        for (let x = 0; x < this.mapSize[0]; x++) {
             let row = [];
-            for (let z = 0; z < 8; z++) {
-                row.push(CubeMap.randInt(4));
+            for (let z = 0; z < this.mapSize[1]; z++) {
+                row.push(CubeMap.rand(4));
             }
             this.map.push(row);
         }
@@ -13,23 +14,24 @@ class CubeMap {
     }
 
     render(parent) {
-        for (let x = 0; x < 8; x++) {
+        let cube = new Cube(parent);
+        for (let x = 0; x < this.mapSize[0]; x++) {
             let row = this.map[x];
-            for (let z = 0; z < 8; z++) {
+            for (let z = 0; z < this.mapSize[1]; z++) {
                 let tileHeight = row[z];
 
-                if (tileHeight != 0) {
-                    let cube = new Cube(parent);
+                if (tileHeight != 0) {     
+                    // let cube = new Cube(parent);    
                     cube.setTextureType(2);
-                    cube.matrix.translate(x-4, 0, z-4);
-                    cube.matrix.scale(0.2, 0.2*tileHeight, 0.2);
+                    cube.matrix.setTranslate(x-this.mapSize[0]/2, 0.01, z-this.mapSize[1]/2);
+                    cube.matrix.scale(1, tileHeight*0.25, 1);
                     cube.render();
                 }
             }
         }
     }
 
-    static randInt(max) {
-        return Math.floor(Math.random() * (max+1));
+    static rand(max) {
+        return Math.floor(Math.pow(Math.random(),3) * (max+1));
     }
 }
