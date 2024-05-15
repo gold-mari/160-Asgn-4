@@ -71,7 +71,6 @@ let g_textureSources = [
 let u_Samplers = [];
 let g_Textures = [];
 
-
 let u_whichTexture;
 
 let g_placeholderSlider = -10;
@@ -79,6 +78,7 @@ let g_placeholderSlider = -10;
 let g_dragStartAngle = [0, 0];
 let g_dragStartMousePos = [0, 0];
 
+let g_lastMouse = undefined;
 let g_Camera = undefined;
 
 let g_shapesList = [];
@@ -107,8 +107,10 @@ function main() {
         up: new Vector3([0,1,0])
     })
 
-    // Register function (event handler) to be called on a mouse press
-    // canvas.onmousedown = function(ev) { click(ev, true) };
+    // On click
+    canvas.onmousedown = function(ev) { click(ev, true) };
+    // On drag
+    canvas.onmousemove = function(ev) { if(ev.buttons == 1) { click(ev, false); } };
 
     document.onkeydown = keydown;
 
@@ -275,20 +277,28 @@ function clearCanvas() {
 // Event callback methods
 // ================================================================
 
-// function click(ev, dragStart) {
+function click(ev, dragStart) {
 
-//     // Extract the event click and convert to WebGL canvas space
-//     let [x, y] = coordinatesEventToGLSpace(ev);
+    // Extract the event click and convert to WebGL canvas space
+    let [x, y] = coordinatesEventToGLSpace(ev);
 
-//     if (dragStart) {
-//         g_dragStartAngle = [g_globalAngle[0], g_globalAngle[1]];
-//         g_dragStartMousePos = [x, y]
-//     }
+    if (dragStart) {
+        // Starting a drag.
+        console.log("Started a drag");
+        g_lastMouse = [x, y];
+    } else {
+        // Continuing a drag.
+        console.log("Continued a drag");
 
-//     g_globalAngle[0] = g_dragStartAngle[0] + ((x - g_dragStartMousePos[0]) * -180);
-//     g_globalAngle[1] = g_dragStartAngle[1] + ((y - g_dragStartMousePos[1]) * 180);
-//     renderAllShapes();
-// }
+        let deltaX = x-g_lastMouse[0];
+        console.log(`deltaX: ${deltaX}`);
+
+        g_Camera.pan(deltaX * 20);
+
+        g_lastMouse = [x, y];
+    }
+    renderAllShapes();
+}
 
 function keydown(ev) {
 
@@ -298,8 +308,8 @@ function keydown(ev) {
     if (ev.keyCode == 65) g_Camera.moveLeft();
     if (ev.keyCode == 68) g_Camera.moveRight();
 
-    if (ev.keyCode == 81) g_Camera.panLeft();
-    if (ev.keyCode == 69) g_Camera.panRight();
+    if (ev.keyCode == 81) g_Camera.pan(-1);
+    if (ev.keyCode == 69) g_Camera.pan(1);
 
     renderAllShapes();
 }

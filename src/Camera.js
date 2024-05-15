@@ -53,11 +53,12 @@ class Camera {
         return step;
     }
 
-    getTurnVector(panRight) {
+    getTurnVector(amount=1) {
         let step = this.getStep();
         let radius = Math.sqrt(Math.pow(step.elements[0], 2) + Math.pow(step.elements[2], 2));
         let radians = Math.atan2(step.elements[2], step.elements[0]);
-        let newRadians = (panRight) ? radians+this.rotationScale : radians-this.rotationScale;
+
+        let newRadians = radians + amount*this.rotationScale;
 
         let turnVector = new Vector3([
             radius * Math.cos(newRadians),
@@ -92,14 +93,8 @@ class Camera {
         this.at.sub(right);
     }
 
-    panRight() {
-        let turnVector = this.getTurnVector(true);
-        this.at.set(this.eye);
-        this.at.add(turnVector);
-    }
-
-    panLeft() {
-        let turnVector = this.getTurnVector(false);
+    pan(amount) {
+        let turnVector = this.getTurnVector(amount);
         this.at.set(this.eye);
         this.at.add(turnVector);
     }
