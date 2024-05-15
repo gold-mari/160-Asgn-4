@@ -231,6 +231,12 @@ function addActionsForHTMLUI() {
         g_renderAngle = angle.value = 70;
         sendTextTOHTML("angleLabel", `Render Distance (current: ${g_renderAngle})`);
     });
+
+    // Reset camera button
+    let resetCamera = document.getElementById("resetCamera");
+    resetCamera.addEventListener("mousedown", function() {
+        g_camera.reset();
+    });
 }
 
 function initTextures() {
@@ -374,13 +380,13 @@ function renderAllShapes() {
     let sky = new Cube(root);
     sky.setTextureType(3);
     sky.matrix.rotate(g_seconds*0.3, 1, 1, 1);
-    sky.matrix.scale(128, 64, 128);
+    sky.matrix.scale(256, 256, 256);
     sky.render();
 
     let sea = new Cube(root);
     sea.setTextureType(2);
     sea.matrix.translate(0, 0, 0);
-    sea.matrix.scale(128, 0, 128);
+    sea.matrix.scale(256, 0, 256);
     sea.render();
 
     g_cubesDrawn = g_map.render(root, g_seconds, g_camera, g_renderDistance, g_renderAngle);

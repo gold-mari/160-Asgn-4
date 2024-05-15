@@ -10,11 +10,16 @@ class Camera {
         }
     ) {
         this.canvas = canvas;
+        this.baseParams = params;
+        this.reset();
+        this.update();
+    }
 
-        this.fov = params.fov;
-        this.eye = params.eye;
-        this.at = params.at;
-        this.up = params.up;
+    reset() {
+        this.fov = this.baseParams.fov;
+        this.eye = new Vector3(this.baseParams.eye);
+        this.at = new Vector3(this.baseParams.at);
+        this.up = new Vector3(this.baseParams.up);
 
         this.projectionMatrix = new Matrix4();
         this.viewMatrix = new Matrix4();
