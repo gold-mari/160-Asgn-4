@@ -63,24 +63,26 @@ class Polyhedron {
         gl.uniformMatrix4fv(u_ModelMatrix, false, this.matrix.elements);
         // Pass in the texture type.
         gl.uniform1i(u_whichTexture, this.textureType);
+        // Pass in the fragColor. It's constant, now.
+        gl.uniform4f(u_FragColor, this.color.r, this.color.g, this.color.b, 1);
 
-        // Pass the color of a point to u_FragColor variable
         let triangles = this.getTriangles();
-        let finalFalloff = 1-this.shadingIntensity;
-        let falloff = 1;
+
+        let allVertices = [];
+        let allUVs = [];
 
         for (let i = 0; i < triangles.length; i++) {
-            falloff = Polyhedron.lerp(1, finalFalloff, (i/triangles.length));
-            
-            gl.uniform4f(u_FragColor, this.color.r*falloff, this.color.g*falloff, this.color.b*falloff, 1);
-
             if (this.uvsImplemented()) {
-                Triangle.drawTriangle3DUV(triangles[i][0], triangles[i][1]);
+                allVertices = allVertices.concat(triangles[i][0]);
+                allUVs = allUVs.concat(triangles[i][1]);
+                // Triangle.drawTriangle3D(triangles[i][0]);
+                // Triangle.drawTriangle3DUV(triangles[i][0], triangles[i][1]);
             } else {
-                Triangle.drawTriangle3D(triangles[i]);
+                console.log(`Polyhedron Error: Missing UV map for ${this.constructor.name}`)
             }
-            
         }
+        
+        Triangle.drawTriangle3DUV(allVertices, allUVs);
     }
 
     getTriangles() {

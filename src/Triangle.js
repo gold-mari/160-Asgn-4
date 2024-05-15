@@ -75,7 +75,7 @@ class Triangle {
 
     static drawTriangle3D(vertices) {
 
-        let n = 3;
+        let n = vertices.length/3;
 
         // Create a buffer object
         let vertexBuffer = gl.createBuffer();
@@ -100,7 +100,13 @@ class Triangle {
 
     static drawTriangle3DUV(vertices, uv) {
 
-        let n = 3;
+        if (vertices.length/3 != uv.length/2) {
+            console.log("Triangle Error: drawTriangle3DUV failed.\n" + 
+                        `Different number of vertices (${vertices.length/3}) and UVs (${uv.length/2}).")`);
+            return -1;
+        }
+
+        let n = vertices.length/3;
 
         // Create a vertex buffer object
         let vertexBuffer = gl.createBuffer();

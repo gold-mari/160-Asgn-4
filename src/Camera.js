@@ -82,13 +82,13 @@ class Camera {
     }
 
     moveRight() {
-        let right = Vector3.cross(this.getStep(), g_Camera.up);
+        let right = Vector3.cross(this.getStep(), g_camera.up);
         this.eye.add(right);
         this.at.add(right);
     }
 
     moveLeft() {
-        let right = Vector3.cross(this.getStep(), g_Camera.up);
+        let right = Vector3.cross(this.getStep(), g_camera.up);
         this.eye.sub(right);
         this.at.sub(right);
     }

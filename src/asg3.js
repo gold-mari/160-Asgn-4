@@ -79,7 +79,9 @@ let g_dragStartAngle = [0, 0];
 let g_dragStartMousePos = [0, 0];
 
 let g_lastMouse = undefined;
-let g_Camera = undefined;
+let g_camera = undefined;
+
+let g_map = undefined;
 
 let g_shapesList = [];
 
@@ -100,7 +102,7 @@ function main() {
     // Set up actions for the HTML UI elements
     addActionsForHTMLUI();
 
-    g_Camera = new Camera(canvas, {
+    g_camera = new Camera(canvas, {
         fov: 50,
         eye: new Vector3([3,0,-3]),
         at: new Vector3([-100,0,100]),
@@ -119,6 +121,9 @@ function main() {
 
     // Initialize textures
     initTextures();
+
+    // Setup the cubemap
+    g_map = new CubeMap();
 
     g_startTime = performance.now()/1000;
     requestAnimationFrame(tick);
@@ -284,16 +289,11 @@ function click(ev, dragStart) {
 
     if (dragStart) {
         // Starting a drag.
-        console.log("Started a drag");
         g_lastMouse = [x, y];
     } else {
         // Continuing a drag.
-        console.log("Continued a drag");
-
         let deltaX = x-g_lastMouse[0];
-        console.log(`deltaX: ${deltaX}`);
-
-        g_Camera.pan(deltaX * 20);
+        g_camera.pan(deltaX * 20);
 
         g_lastMouse = [x, y];
     }
@@ -302,14 +302,14 @@ function click(ev, dragStart) {
 
 function keydown(ev) {
 
-    if (ev.keyCode == 87) g_Camera.moveForward();
-    if (ev.keyCode == 83) g_Camera.moveBackward();
+    if (ev.keyCode == 87) g_camera.moveForward();
+    if (ev.keyCode == 83) g_camera.moveBackward();
 
-    if (ev.keyCode == 65) g_Camera.moveLeft();
-    if (ev.keyCode == 68) g_Camera.moveRight();
+    if (ev.keyCode == 65) g_camera.moveLeft();
+    if (ev.keyCode == 68) g_camera.moveRight();
 
-    if (ev.keyCode == 81) g_Camera.pan(-1);
-    if (ev.keyCode == 69) g_Camera.pan(1);
+    if (ev.keyCode == 81) g_camera.pan(-1);
+    if (ev.keyCode == 69) g_camera.pan(1);
 
     renderAllShapes();
 }
@@ -336,9 +336,9 @@ function renderAllShapes() {
     let startTime = performance.now();
 
     // Update our camera.
-    g_Camera.recalculateMatrices();
-    gl.uniformMatrix4fv(u_ProjectionMatrix, false, g_Camera.projectionMatrix.elements);
-    gl.uniformMatrix4fv(u_ViewMatrix, false, g_Camera.viewMatrix.elements);
+    g_camera.recalculateMatrices();
+    gl.uniformMatrix4fv(u_ProjectionMatrix, false, g_camera.projectionMatrix.elements);
+    gl.uniformMatrix4fv(u_ViewMatrix, false, g_camera.viewMatrix.elements);
 
     // Clear <canvas>
     clearCanvas();
@@ -347,31 +347,33 @@ function renderAllShapes() {
     root.matrix.translate(0, 0, 0);
     root.matrix.scale(1, 1, 1);
 
-    let one = new Cube(root);
-    one.setColorHex("ffcc00ff");
-    one.setShadingIntensity(0.25);
-    one.matrix.scale(0.5, 0.5, 0.5);
-    one.render();
+    let horseCube = new Cube(root);
+    horseCube.setColorHex("ffcc00ff");
+    horseCube.setShadingIntensity(0.25);
+    horseCube.matrix.scale(0.5, 0.5, 0.5);
+    horseCube.render();
 
-    let two = new Cube(root);
-    two.setColorHex("ffcc00ff");
-    two.setShadingIntensity(0.25);
-    two.setTextureType(1);
-    two.matrix.translate(0.5, 0, 0);
-    two.matrix.rotate(45, 1, 1, 1);
-    two.matrix.scale(0.2, 0.2, 0.2);
-    two.render();
+    let meCube = new Cube(root);
+    meCube.setColorHex("ffcc00ff");
+    meCube.setShadingIntensity(0.25);
+    meCube.setTextureType(1);
+    meCube.matrix.translate(0.5, 0, 0);
+    meCube.matrix.rotate(45, 1, 1, 1);
+    meCube.matrix.scale(0.2, 0.2, 0.2);
+    meCube.render();
 
     let sky = new Cube(root);
     sky.setTextureType(3);
-    sky.matrix.scale(20, 20, 20);
+    sky.matrix.scale(32, 32, 32);
     sky.render();
 
     let grass = new Cube(root);
     grass.setTextureType(2);
     grass.matrix.translate(0, -1, 0);
-    grass.matrix.scale(20, 0, 20);
+    grass.matrix.scale(32, 0, 32);
     grass.render();
+
+    g_map.render(root);
 
     updatePerformanceDebug(startTime, performance.now());
 }
