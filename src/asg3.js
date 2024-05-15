@@ -87,6 +87,8 @@ let g_cubesDrawn = 0;
 let g_startTime = 0;
 let g_seconds = 0;
 
+let g_music = undefined;
+
 // ================================================================
 // Main
 // ================================================================
@@ -205,6 +207,9 @@ function connectVariablesToGLSL() {
 }
 
 function addActionsForHTMLUI() {
+    // Play music
+    let g_music = document.getElementById("music");
+
     // Initialize dynamic text
     sendTextTOHTML("distanceLabel", `Render Distance (current: ${g_renderDistance})`);
     sendTextTOHTML("angleLabel", `Render Angle (current: ${g_renderAngle})`);
