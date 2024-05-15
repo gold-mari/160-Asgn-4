@@ -65,15 +65,13 @@ let u_FragColor;
 let g_textureSources = [
     '../resources/horse.png',
     '../resources/dylan.png',
-    '../resources/grass.png',
+    '../resources/sea.png',
     '../resources/sky.png',
 ];
 let u_Samplers = [];
 let g_Textures = [];
 
 let u_whichTexture;
-
-let g_placeholderSlider = -10;
 
 let g_dragStartAngle = [0, 0];
 let g_dragStartMousePos = [0, 0];
@@ -82,8 +80,9 @@ let g_lastMouse = undefined;
 let g_camera = undefined;
 
 let g_map = undefined;
-
-let g_shapesList = [];
+let g_renderAngle = 70;
+let g_renderDistance = 40;
+let g_cubesDrawn = 0;
 
 let g_startTime = 0;
 let g_seconds = 0;
@@ -133,6 +132,8 @@ function tick() {
     let delta = g_seconds;
     g_seconds = performance.now()/1000 - g_startTime;
     delta = g_seconds - delta;
+
+    // console.log(Math.sin(g_seconds));
 
     renderAllShapes();
 
@@ -205,20 +206,30 @@ function connectVariablesToGLSL() {
 
 function addActionsForHTMLUI() {
     // Initialize dynamic text
-    sendTextTOHTML("placeholderLabel", `Placeholder Slider (current: ${g_placeholderSlider})`);
+    sendTextTOHTML("distanceLabel", `Render Distance (current: ${g_renderDistance})`);
+    sendTextTOHTML("angleLabel", `Render Angle (current: ${g_renderAngle})`);
     
-    // Placeholder button
-    let placeholderButton = document.getElementById("placeholderButton");
-    placeholderButton.addEventListener("mousedown", function() {
-        console.log("Clicked");
+    // Render distance slider
+    let distance = document.getElementById("distance");
+    distance.addEventListener("input", function() {
+        g_renderDistance = this.value;
+        sendTextTOHTML("distanceLabel", `Render Distance (current: ${g_renderDistance})`);
     });
 
-    // Placeholder slider
-    let placeholder = document.getElementById("placeholder");
-    placeholder.addEventListener("input", function() {
-        sendTextTOHTML("placeholderLabel", `Right Upper Roll (current: ${this.value})`);
-        g_placeholderSlider = this.value;
-        renderAllShapes();
+    // Render angle slider
+    let angle = document.getElementById("angle");
+    angle.addEventListener("input", function() {
+        g_renderAngle = this.value;
+        sendTextTOHTML("angleLabel", `Render Angle (current: ${g_renderAngle})`);
+    });
+
+    // Reset sliders button
+    let resetSliders = document.getElementById("resetSliders");
+    resetSliders.addEventListener("mousedown", function() {
+        g_renderDistance = distance.value = 40
+        sendTextTOHTML("distanceLabel", `Render Distance (current: ${g_renderDistance})`);
+        g_renderAngle = angle.value = 70;
+        sendTextTOHTML("angleLabel", `Render Distance (current: ${g_renderAngle})`);
     });
 }
 
@@ -297,7 +308,6 @@ function click(ev, dragStart) {
 
         g_lastMouse = [x, y];
     }
-    renderAllShapes();
 }
 
 function keydown(ev) {
@@ -310,8 +320,6 @@ function keydown(ev) {
 
     if (ev.keyCode == 81) g_camera.pan(-1);
     if (ev.keyCode == 69) g_camera.pan(1);
-
-    renderAllShapes();
 }
 
 // ================================================================
@@ -336,7 +344,7 @@ function renderAllShapes() {
     let startTime = performance.now();
 
     // Update our camera.
-    g_camera.recalculateMatrices();
+    g_camera.update();
     gl.uniformMatrix4fv(u_ProjectionMatrix, false, g_camera.projectionMatrix.elements);
     gl.uniformMatrix4fv(u_ViewMatrix, false, g_camera.viewMatrix.elements);
 
@@ -347,34 +355,35 @@ function renderAllShapes() {
     root.matrix.translate(0, 0, 0);
     root.matrix.scale(1, 1, 1);
 
-    let horseCube = new Cube(root);
-    horseCube.setColorHex("ffcc00ff");
-    horseCube.matrix.translate(0, 1, 0);
-    horseCube.setShadingIntensity(0.25);
-    horseCube.matrix.scale(0.5, 0.5, 0.5);
-    horseCube.render();
+    // let horseCube = new Cube(root);
+    // horseCube.setColorHex("ffcc00ff");
+    // horseCube.matrix.translate(0, 1, 0);
+    // horseCube.setShadingIntensity(0.25);
+    // horseCube.matrix.scale(0.5, 0.5, 0.5);
+    // horseCube.render();
 
-    let meCube = new Cube(root);
-    meCube.setColorHex("ffcc00ff");
-    meCube.setShadingIntensity(0.25);
-    meCube.setTextureType(1);
-    meCube.matrix.translate(0.5, 1, 0);
-    meCube.matrix.rotate(45, 1, 1, 1);
-    meCube.matrix.scale(0.2, 0.2, 0.2);
-    meCube.render();
+    // let meCube = new Cube(root);
+    // meCube.setColorHex("ffcc00ff");
+    // meCube.setShadingIntensity(0.25);
+    // meCube.setTextureType(1);
+    // meCube.matrix.translate(0.5, 1, 0);
+    // meCube.matrix.rotate(45, 1, 1, 1);
+    // meCube.matrix.scale(0.2, 0.2, 0.2);
+    // meCube.render();
 
     let sky = new Cube(root);
     sky.setTextureType(3);
-    sky.matrix.scale(32, 32, 32);
+    sky.matrix.rotate(g_seconds*0.3, 1, 1, 1);
+    sky.matrix.scale(128, 64, 128);
     sky.render();
 
-    let grass = new Cube(root);
-    grass.setTextureType(2);
-    grass.matrix.translate(0, 0, 0);
-    grass.matrix.scale(32, 0, 32);
-    grass.render();
+    let sea = new Cube(root);
+    sea.setTextureType(2);
+    sea.matrix.translate(0, 0, 0);
+    sea.matrix.scale(128, 0, 128);
+    sea.render();
 
-    g_map.render(root);
+    g_cubesDrawn = g_map.render(root, g_seconds, g_camera, g_renderDistance, g_renderAngle);
 
     updatePerformanceDebug(startTime, performance.now());
 }
@@ -386,7 +395,9 @@ function renderAllShapes() {
 function updatePerformanceDebug(start, end) {
     let duration = end-start;
     sendTextTOHTML("performance",
-                        `ms: ${Math.floor(duration)} | fps: ${Math.floor(1000/duration)/10}`)
+                        `ms: ${Math.floor(duration)} | ` +
+                        `fps: ${Math.floor(1000/duration)/10} | ` +
+                        `cubes drawn: ${g_cubesDrawn}`);
 }
 
 function sendTextTOHTML(htmlID, text) {

@@ -22,15 +22,16 @@ class Camera {
         this.movementScale = 0.1;
         this.rotationScale = 0.02;
 
-        this.recalculateMatrices();
+        this.update();
     }
 
-    recalculateMatrices() {
+    update() {
         this.projectionMatrix.setPerspective(
             this.fov,                               // FOV
             this.canvas.width/this.canvas.height,   // aspect
             0.1,                                    // near
-            100                                     // far
+            250                                     // far
+                                                    // wherever you are, i believe that the heart will go on
         );
 
         this.viewMatrix.setLookAt(
@@ -38,6 +39,8 @@ class Camera {
             ...this.at.elements,  // at
             ...this.up.elements   // up
         );
+
+        this.movedSinceLastFrame = false;
     }
 
     // ================================
@@ -73,29 +76,39 @@ class Camera {
         let step = this.getStep();
         this.eye.add(step);
         this.at.add(step);
+
+        this.movedSinceLastFrame = true;
     }
 
     moveBackward() {
         let step = this.getStep();
         this.eye.sub(step);
         this.at.sub(step);
+
+        this.movedSinceLastFrame = true;
     }
 
     moveRight() {
         let right = Vector3.cross(this.getStep(), g_camera.up);
         this.eye.add(right);
         this.at.add(right);
+
+        this.movedSinceLastFrame = true;
     }
 
     moveLeft() {
         let right = Vector3.cross(this.getStep(), g_camera.up);
         this.eye.sub(right);
         this.at.sub(right);
+
+        this.movedSinceLastFrame = true;
     }
 
     pan(amount) {
         let turnVector = this.getTurnVector(amount);
         this.at.set(this.eye);
         this.at.add(turnVector);
+
+        this.movedSinceLastFrame = true;
     }
 }
