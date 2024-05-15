@@ -18,16 +18,17 @@ body {
 }
 
 .main-panel {
-    width: 50%;
+    width: 100%;
     float: left;
+    transform: translate(-18%, 0%);
 }
 
-.side-panel {
-    width: 28%;
-    padding-left: 2%;
-    padding-right: 2%;
-    padding-bottom: 2%;
+.inset {
+    position: absolute;
+    height: 88%;
+    top: 0%;
+    left: 80%;
+    transform: translate(54%, 0%);
+    padding: 3.45%;
     background-color: #11111188;
-    fill-opacity: 0.5;
-    float: right;
 }  

@@ -7,40 +7,52 @@
     </head>
  
     <body onload="main()">
-        <audio id="music" autoplay loop>
-            <source src="../resources/evening.mp3" type="audio/mpeg" />
-            Your browser does not support the audio element.
-        </audio>
+        
 
         <div class="panels">
             <div class="main-panel">
-                <canvas id="webgl" width="1200" height="600">
+                <canvas id="webgl" width="1000" height="600">
                     Please use the browser supporting "canvas".
                 </canvas>
-            </div>
 
-            <div class="side-panel">
-                <p><strong>Last night, you dreamt of being stranded at sea. You swam until your arms gave out,
-                    but couldn't find land. Eventually, you swam past the sea and into the inky black sky.
-                </strong></p>
-                <p id="performance">Performance goes here.</p>
+                <div class="inset">
+                    <strong>
+                        <p>
+                            Last night, you dreamt of being stranded at sea. You swam until your arms gave out,
+                        but couldn't find land. Eventually, you swam past the sea and into the inky black sky.
+                        </p>
+                        <p>
+                            The whole time, all you could think was: "Where are the fish? Aren't there supposed
+                            to be fish?" And it was true; there were no fish. Just waves, lapping mournfully
+                            against your fins.
+                        </p>
+                    </strong>
 
-                <form>
-                    <input id="resetSliders" name="resetSliders" type="button" value="Reset Sliders">
-                    <input id="resetCamera" name="resetCamera" type="button" value="Reset Camera">
-
-                    <br><br>
-
-                    <label for="distance"><strong>
-                        <div id="distanceLabel">Render Distance</div>
-                    </strong></label>
-                    <input id="distance" name="distance" type="range" class="slider" min="0" max="100" value="40">
-
-                    <label for="angle"><strong>
-                        <div id="angleLabel">Render Angle</div>
-                    </strong></label>
-                    <input id="angle" name="angle" type="range" class="slider" min="0" max="180" value="70">
-                </form>
+                    <p>WASD to swim. QE or mouse drag to turn your head.</p>
+    
+                    <audio id="music" controls loop>
+                        <source src="../resources/evening.mp3" type="audio/mpeg" />
+                        Your browser does not support the audio element.
+                    </audio>
+    
+                    <p id="performance">Performance goes here.</p>
+    
+                    <form>
+                        <input id="resetSliders" name="resetSliders" type="button" value="Reset Sliders">
+                        <input id="resetCamera" name="resetCamera" type="button" value="Reset Camera">
+    
+                        <br><br>
+    
+                            <div id="distanceLabel">Render Distance</div>
+                        </strong></label>
+                        <input id="distance" name="distance" type="range" class="slider" min="0" max="100" value="40">
+    
+                        <label for="angle"><strong>
+                            <div id="angleLabel">Render Angle</div>
+                        </strong></label>
+                        <input id="angle" name="angle" type="range" class="slider" min="0" max="180" value="70">
+                    </form>
+                </div>
             </div>
         </div>
             

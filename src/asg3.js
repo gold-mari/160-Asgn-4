@@ -408,7 +408,7 @@ function updatePerformanceDebug(start, end) {
     sendTextTOHTML("performance",
                         `ms: ${Math.floor(duration)} | ` +
                         `fps: ${Math.floor(1000/duration)/10}` +
-                        `<br>cubes drawn: ${g_cubesDrawn}`);
+                        `<br>cubes drawn: ${g_cubesDrawn + 2}`); // Plus 2 for ground + skybox
 }
 
 function sendTextTOHTML(htmlID, text) {
