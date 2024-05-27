@@ -41,6 +41,7 @@ var FSHADER_SOURCE = `
     uniform int u_whichTexture;
     uniform vec3 u_lightPos;
     uniform vec3 u_cameraPos;
+    uniform bool u_showLight;
 
     void main() {
         if (u_whichTexture == -3) {
@@ -69,21 +70,23 @@ var FSHADER_SOURCE = `
             gl_FragColor = vec4(1, 1, 0, 1);
         }
 
-        // N dot L
-        vec3 lightVector = u_lightPos-vec3(v_VertPos);
-        float r = length(lightVector);
-        vec3 N = normalize(v_Normal);
-        vec3 L = normalize(lightVector);
-        float nDotL = max(0.0, dot(N,L));
+        if (u_showLight) {
+            // N dot L
+            vec3 lightVector = u_lightPos-vec3(v_VertPos);
+            float r = length(lightVector);
+            vec3 N = normalize(v_Normal);
+            vec3 L = normalize(lightVector);
+            float nDotL = max(0.0, dot(N,L));
 
-        // Specular
-        vec3 reflection = reflect(-L, N);
-        vec3 eye = normalize(u_cameraPos-vec3(v_VertPos));
-        float specular = pow(max(dot(eye, reflection), 0.0), 100.0);
+            // Specular
+            vec3 reflection = reflect(-L, N);
+            vec3 eye = normalize(u_cameraPos-vec3(v_VertPos));
+            float specular = pow(max(dot(eye, reflection), 0.0), 100.0);
 
-        vec3 diffuse = vec3(gl_FragColor) * nDotL;
-        vec3 ambient = vec3(gl_FragColor) * 0.3;
-        gl_FragColor = vec4(diffuse+ambient+specular, 1.0);
+            vec3 diffuse = vec3(gl_FragColor) * nDotL;
+            vec3 ambient = vec3(gl_FragColor) * 0.3;
+            gl_FragColor = vec4(diffuse+ambient+specular, 1.0);
+        }
     }`;
 
 let canvas;
@@ -100,6 +103,7 @@ let u_FragColor;
 let u_whichTexture;
 let u_lightPos;
 let u_cameraPos;
+let u_showLight;
 
 let g_textureSources = [
     '../resources/horse.png',
@@ -127,6 +131,7 @@ let g_seconds = 0;
 let g_music = undefined;
 
 let g_showNormals = false;
+let g_showLight = true;
 
 let g_lightPosition = [0, 0.5, 0];
 
@@ -222,6 +227,7 @@ function connectVariablesToGLSL() {
     u_whichTexture = getUniform('u_whichTexture');
     u_lightPos = getUniform('u_lightPos');
     u_cameraPos = getUniform('u_cameraPos');
+    u_showLight = getUniform('u_showLight');
 
     // Provide default values
     gl.vertexAttrib3f(a_Position, 0.0, 0.0, 0.0);
@@ -309,6 +315,14 @@ function addActionsForHTMLUI() {
     toggleNormals.addEventListener("mousedown", function() {
         g_showNormals = !g_showNormals;
         toggleNormals.value = `Toggle Normals (${g_showNormals ? "On" : "Off"})`;
+    });
+
+    // Toggle lights button
+    let toggleLight = document.getElementById("toggleLight");
+    toggleLight.value = "Toggle Lights (On)";
+    toggleLight.addEventListener("mousedown", function() {
+        g_showLight = !g_showLight;
+        toggleLight.value = `Toggle Normals (${g_showLight ? "On" : "Off"})`;
     });
 }
 
@@ -427,6 +441,16 @@ function renderAllShapes() {
     gl.uniformMatrix4fv(u_ProjectionMatrix, false, g_camera.projectionMatrix.elements);
     gl.uniformMatrix4fv(u_ViewMatrix, false, g_camera.viewMatrix.elements);
 
+    // Update light-related stuff
+    let lightAnimPos = [
+        Number(g_lightPosition[0]) + Math.sin(g_seconds),
+        g_lightPosition[1],
+        Number(g_lightPosition[2]) + Math.cos(g_seconds)
+    ];
+    gl.uniform3f(u_lightPos, ...lightAnimPos);
+    gl.uniform3f(u_cameraPos, ...g_camera.eye.elements);
+    gl.uniform1i(u_showLight, g_showLight);
+
     // Clear <canvas>
     clearCanvas();
 
@@ -470,16 +494,7 @@ function renderAllShapes() {
     orb.matrix.scale(1, 1, 1);
     orb.render();
 
-    let light = new Cube(root);
-    let lightAnimPos = [
-        Number(g_lightPosition[0]) + Math.sin(g_seconds),
-        g_lightPosition[1],
-        Number(g_lightPosition[2]) + Math.cos(g_seconds)
-    ];
-
-    gl.uniform3f(u_lightPos, ...lightAnimPos);
-    gl.uniform3f(u_cameraPos, ...g_camera.eye.elements)
-    
+    let light = new Cube(root);    
     light.setColorHex("ff00ffff");
     light.setTextureType(-2);
     light.matrix.translate(...lightAnimPos);
