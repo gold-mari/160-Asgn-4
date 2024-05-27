@@ -50,8 +50,10 @@ var FSHADER_SOURCE = `
     uniform vec3 u_spotLightAt;
     uniform float u_spotLightIntensity;
     uniform vec3 u_cameraPos;
-    uniform bool u_showLight;
-    uniform vec3 u_pointLightColor;
+    uniform bool u_showPointLight;
+    uniform bool u_showSpotLight;
+    uniform bool u_useLighting;
+    uniform vec3 u_lightColor;
 
     void main() {
         if (u_whichTexture == -3) {
@@ -80,58 +82,64 @@ var FSHADER_SOURCE = `
             gl_FragColor = vec4(1, 1, 0, 1);
         }
 
-        if (u_showLight && u_litMaterial) {
+        if (u_useLighting && u_litMaterial) {
+
+            vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
 
             // POINT LIGHT ================================
+            if (u_showPointLight) {
+                // N dot L
+                vec3 lightVector = u_pointLightPos-vec3(v_VertPos);
+                float r = length(lightVector);
+                vec3 N = normalize(v_Normal);
+                vec3 L = normalize(lightVector);
+                float nDotL = max(0.0, dot(N,L));
 
-            // N dot L
-            vec3 lightVector = u_pointLightPos-vec3(v_VertPos);
-            float r = length(lightVector);
-            vec3 N = normalize(v_Normal);
-            vec3 L = normalize(lightVector);
-            float nDotL = max(0.0, dot(N,L));
+                // Specular
+                vec3 reflection = reflect(-L, N);
+                vec3 eye = normalize(u_cameraPos-vec3(v_VertPos));
+                float specularAmount = pow(max(dot(eye, reflection), 0.0), 100.0);
 
-            // Specular
-            vec3 reflection = reflect(-L, N);
-            vec3 eye = normalize(u_cameraPos-vec3(v_VertPos));
-            float specularAmount = pow(max(dot(eye, reflection), 0.0), 100.0);
-
-            vec3 pointAmbient = (vec3(u_pointLightColor) * vec3(gl_FragColor)) * 0.3;
-            vec3 pointDiffuse = (vec3(u_pointLightColor) * vec3(gl_FragColor)) * nDotL;
-            vec3 pointSpecular = vec3(u_pointLightColor) * specularAmount;
-            vec3 pointLight = pointAmbient + pointDiffuse + pointSpecular;
-            gl_FragColor = vec4(pointLight, 1.0);
+                vec3 pointAmbient = (vec3(u_lightColor) * vec3(gl_FragColor)) * 0.3;
+                vec3 pointDiffuse = (vec3(u_lightColor) * vec3(gl_FragColor)) * nDotL;
+                vec3 pointSpecular = vec3(u_lightColor) * specularAmount;
+                vec3 pointLight = pointAmbient + pointDiffuse + pointSpecular;
+                color += vec4(pointLight, 1.0);
+            }
 
             // SPOT LIGHT ================================
+            if (u_showSpotLight) {
+                // N dot L
+                vec3 lightVector = u_spotLightPos-vec3(v_VertPos);
+                vec3 L = normalize(lightVector);
+                vec3 directionVector = u_spotLightPos-u_spotLightAt;
+                vec3 D = normalize(directionVector);
+                float angle = degrees(acos(dot(D, L)));
 
-            // N dot L
-            lightVector = u_spotLightPos-vec3(v_VertPos);
-            L = normalize(lightVector);
-            vec3 directionVector = u_spotLightPos-u_spotLightAt;
-            vec3 D = normalize(directionVector);
-            float angle = degrees(acos(dot(D, L)));
+                float r = length(lightVector);
+                vec3 N = normalize(v_Normal);
+                float nDotL = max(0.0, dot(N,L));
 
-            r = length(lightVector);
-            N = normalize(v_Normal);
-            nDotL = max(0.0, dot(N,L));
+                // Specular
+                vec3 reflection = reflect(-L, N);
+                vec3 eye = normalize(u_cameraPos-vec3(v_VertPos));
+                float specularAmount = pow(max(dot(eye, reflection), 0.0), 100.0);
 
-            // Specular
-            reflection = reflect(-L, N);
-            eye = normalize(u_cameraPos-vec3(v_VertPos));
-            specularAmount = pow(max(dot(eye, reflection), 0.0), 100.0);
+                vec3 spotColor = vec3(u_lightColor) * u_spotLightIntensity;
 
-            vec3 spotColor = vec3(u_pointLightColor) * u_spotLightIntensity;
+                vec3 spotDiffuse = spotColor * vec3(gl_FragColor) * nDotL;
+                vec3 spotSpecular = spotColor * specularAmount;
+                vec3 spotLight = spotDiffuse + spotSpecular;
 
-            vec3 spotDiffuse = spotColor * vec3(gl_FragColor) * nDotL;
-            vec3 spotSpecular = spotColor * specularAmount;
-            vec3 spotLight = spotDiffuse + spotSpecular;
-
-            if (angle < 25.0) {
-                float angleNorm = angle/25.0;
-                float amt = angleNorm*angleNorm*angleNorm;
-                spotLight = (1.0-amt)*spotLight;
-                gl_FragColor += vec4(spotLight, 1.0);
+                if (angle < 25.0) {
+                    float angleNorm = angle/25.0;
+                    float amt = angleNorm*angleNorm*angleNorm;
+                    spotLight = (1.0-amt)*spotLight;
+                    color += vec4(spotLight, 1.0);
+                }
             }
+
+            gl_FragColor = color;
         }
     }`;
 
@@ -154,8 +162,10 @@ let u_pointLightPos;
 let u_spotLightPos;
 let u_spotLightAt;
 let u_cameraPos;
-let u_showLight;
-let u_pointLightColor;
+let u_showPointLight;
+let u_showSpotLight;
+let u_useLighting;
+let u_lightColor;
 let u_spotLightIntensity;
 
 let g_textureSources = [
@@ -184,10 +194,12 @@ let g_seconds = 0;
 let g_music = undefined;
 
 let g_showNormals = false;
-let g_showLight = true;
+let g_showPointLight = true;
+let g_showSpotLight = true;
+let g_useLighting = true;
 
 let g_pointLightPosition = [0, 0.5, 0];
-let g_pointLightColor = [1, 1, 1];
+let g_lightColor = [1, 1, 1];
 
 // ================================================================
 // Main
@@ -285,8 +297,10 @@ function connectVariablesToGLSL() {
     u_spotLightPos = getUniform('u_spotLightPos');
     u_spotLightAt = getUniform('u_spotLightAt');
     u_cameraPos = getUniform('u_cameraPos');
-    u_showLight = getUniform('u_showLight');
-    u_pointLightColor = getUniform('u_pointLightColor');
+    u_showPointLight = getUniform('u_showPointLight');
+    u_showSpotLight = getUniform('u_showSpotLight');
+    u_useLighting = getUniform('u_useLighting');
+    u_lightColor = getUniform('u_lightColor');
     u_spotLightIntensity = getUniform('u_spotLightIntensity');
 
     // Provide default values
@@ -323,7 +337,7 @@ function addActionsForHTMLUI() {
     // Initialize dynamic text
     sendTextTOHTML("distanceLabel", `Render Distance (current: ${g_renderDistance})`);
     sendTextTOHTML("pointLightPosLabel", `Point Light Position (current: ${g_pointLightPosition})`);
-    sendTextTOHTML("pointLightColorLabel", `Point Light Color (current: ${RGBListToHexstring(g_pointLightColor)})`);
+    sendTextTOHTML("lightColorLabel", `Light Color (current: ${RGBListToHexstring(g_lightColor)})`);
     sendTextTOHTML("angleLabel", `Render Angle (current: ${g_renderAngle})`);
     
     // Render distance slider
@@ -352,11 +366,11 @@ function addActionsForHTMLUI() {
         pointLightPosY.value = g_pointLightPosition[1];
         pointLightPosZ.value = g_pointLightPosition[2];
         sendTextTOHTML("pointLightPosLabel", `Point Light Position (current: ${g_pointLightPosition})`);
-        g_pointLightColor = [1, 1, 1]
-        pointLightColorR.value = g_pointLightColor[0];
-        pointLightColorG.value = g_pointLightColor[1];
-        pointLightColorB.value = g_pointLightColor[2];
-        sendTextTOHTML("pointLightColorLabel", `Point Light Color (current: ${RGBListToHexstring(g_pointLightColor)})`);
+        g_lightColor = [1, 1, 1]
+        lightColorR.value = g_lightColor[0];
+        lightColorG.value = g_lightColor[1];
+        lightColorB.value = g_lightColor[2];
+        sendTextTOHTML("lightColorLabel", `Light Color (current: ${RGBListToHexstring(g_lightColor)})`);
     });
 
     // Reset camera button
@@ -373,12 +387,28 @@ function addActionsForHTMLUI() {
         toggleNormals.value = `Toggle Normals (${g_showNormals ? "On" : "Off"})`;
     });
 
-    // Toggle lights button
-    let toggleLight = document.getElementById("toggleLight");
-    toggleLight.value = "Toggle Lights (On)";
-    toggleLight.addEventListener("mousedown", function() {
-        g_showLight = !g_showLight;
-        toggleLight.value = `Toggle Lights (${g_showLight ? "On" : "Off"})`;
+    // Use Lighting button
+    let useLighting = document.getElementById("useLighting");
+    useLighting.value = "Use Lighting (On)";
+    useLighting.addEventListener("mousedown", function() {
+        g_useLighting = !g_useLighting;
+        useLighting.value = `Use Lighting (${g_useLighting ? "On" : "Off"})`;
+    });
+
+    // Toggle Point Light button
+    let togglePointLight = document.getElementById("togglePointLight");
+    togglePointLight.value = "Toggle Point Light (On)";
+    togglePointLight.addEventListener("mousedown", function() {
+        g_showPointLight = !g_showPointLight;
+        togglePointLight.value = `Toggle Point Light (${g_showPointLight ? "On" : "Off"})`;
+    });
+
+    // Toggle Point Light button
+    let toggleSpotLight = document.getElementById("toggleSpotLight");
+    toggleSpotLight.value = "Toggle Spot Light (On)";
+    toggleSpotLight.addEventListener("mousedown", function() {
+        g_showSpotLight = !g_showSpotLight;
+        toggleSpotLight.value = `Toggle Spot Light (${g_showSpotLight ? "On" : "Off"})`;
     });
 
     let pointLightPosX = document.getElementById("pointLightPosX");
@@ -391,13 +421,13 @@ function addActionsForHTMLUI() {
         });
     });
 
-    let pointLightColorR = document.getElementById("pointLightColorR");
-    let pointLightColorG = document.getElementById("pointLightColorG");
-    let pointLightColorB = document.getElementById("pointLightColorB");
-    [pointLightColorR, pointLightColorG, pointLightColorB].forEach((slider, index) => {
+    let lightColorR = document.getElementById("lightColorR");
+    let lightColorG = document.getElementById("lightColorG");
+    let lightColorB = document.getElementById("lightColorB");
+    [lightColorR, lightColorG, lightColorB].forEach((slider, index) => {
         slider.addEventListener("input", function() {
-            g_pointLightColor[index] = this.value;
-            sendTextTOHTML("pointLightColorLabel", `Point Light Color (current: ${RGBListToHexstring(g_pointLightColor)})`);
+            g_lightColor[index] = this.value;
+            sendTextTOHTML("lightColorLabel", `Light Color (current: ${RGBListToHexstring(g_lightColor)})`);
         });
     });
 }
@@ -525,8 +555,10 @@ function renderAllShapes() {
     ];
     gl.uniform3f(u_pointLightPos, ...lightAnimPos);
     gl.uniform3f(u_cameraPos, ...g_camera.eye.elements);
-    gl.uniform1i(u_showLight, g_showLight);
-    gl.uniform3f(u_pointLightColor, ...g_pointLightColor);
+    gl.uniform1i(u_showPointLight, g_showPointLight);
+    gl.uniform1i(u_showSpotLight, g_showSpotLight);
+    gl.uniform1i(u_useLighting, g_useLighting);
+    gl.uniform3f(u_lightColor, ...g_lightColor);
 
     // Clear <canvas>
     clearCanvas();
@@ -576,9 +608,9 @@ function renderAllShapes() {
     pointLight.setTextureType(-2);
     pointLight.matrix.translate(...lightAnimPos);
     pointLight.matrix.scale(0.05, 0.05, 0.05);
-    pointLight.setColor(g_pointLightColor[0], g_pointLightColor[1], g_pointLightColor[2], 1)
+    pointLight.setColor(g_lightColor[0], g_lightColor[1], g_lightColor[2], 1)
     pointLight.setLitMaterial(false);
-    pointLight.render();
+    if (g_showPointLight) { pointLight.render(); }
 
     let spotLight = new Cube(root);
     spotLight.at = [1, 0, -2];
@@ -587,9 +619,9 @@ function renderAllShapes() {
     spotLight.setTextureType(-2);
     spotLight.matrix.translate(...spotLight.pos);
     spotLight.matrix.scale(0.1, 0.1, 0.1);
-    spotLight.setColor(g_pointLightColor[0], g_pointLightColor[1], g_pointLightColor[2], 1)
+    spotLight.setColor(g_lightColor[0], g_lightColor[1], g_lightColor[2], 1)
     spotLight.setLitMaterial(false);
-    spotLight.render();
+    if (g_showSpotLight) { spotLight.render(); }
 
     // Update spot light position
     gl.uniform3f(u_spotLightPos, ...spotLight.pos);

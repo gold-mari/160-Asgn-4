@@ -35,8 +35,10 @@
                     <form>
                         <input id="resetSliders" name="resetSliders" type="button" value="Reset Sliders">
                         <input id="resetCamera" name="resetCamera" type="button" value="Reset Camera">
-                        <input id="toggleNormals" name="toggleNormals" type="button" value="Toggle Normals">
-                        <input id="toggleLight" name="toggleLight" type="button" value="Toggle Light">
+                        <input id="toggleNormals" name="toggleNormals" type="button" value="Toggle Normals"> <br>
+                        <input id="useLighting" name="useLighting" type="button" value="Use Lighting"> <br>
+                        <input id="togglePointLight" name="togglePointLight" type="button" value="Toggle Point Light">
+                        <input id="toggleSpotLight" name="toggleSpotLight" type="button" value="Toggle Spot Light">
     
                         <br><br>
                         <label for="distance"><strong>
@@ -59,12 +61,12 @@
                         </div>
 
                         <strong>
-                            <div id="pointLightColorLabel">Point Light Color</div>
+                            <div id="lightColorLabel">Light Color</div>
                         </strong>
                         <div class="triple-slider">
-                            R <input id="pointLightColorR" name="angle" type="range" class="slider" min="0.0" max="1.0" value="1" step="0.01">
-                            G <input id="pointLightColorG" name="angle" type="range" class="slider" min="0.0" max="1.0" value="1" step="0.01">
-                            B <input id="pointLightColorB" name="angle" type="range" class="slider" min="0.0" max="1.0" value="1" step="0.01"> 
+                            R <input id="lightColorR" name="angle" type="range" class="slider" min="0.0" max="1.0" value="1" step="0.01">
+                            G <input id="lightColorG" name="angle" type="range" class="slider" min="0.0" max="1.0" value="1" step="0.01">
+                            B <input id="lightColorB" name="angle" type="range" class="slider" min="0.0" max="1.0" value="1" step="0.01"> 
                         </div>
                     </form>
                 </div>
