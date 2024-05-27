@@ -48,6 +48,7 @@ var FSHADER_SOURCE = `
     uniform vec3 u_lightPos;
     uniform vec3 u_cameraPos;
     uniform bool u_showLight;
+    uniform vec3 u_lightColor;
 
     void main() {
         if (u_whichTexture == -3) {
@@ -87,10 +88,11 @@ var FSHADER_SOURCE = `
             // Specular
             vec3 reflection = reflect(-L, N);
             vec3 eye = normalize(u_cameraPos-vec3(v_VertPos));
-            float specular = pow(max(dot(eye, reflection), 0.0), 100.0);
+            float specularAmount = pow(max(dot(eye, reflection), 0.0), 100.0);
 
-            vec3 diffuse = vec3(gl_FragColor) * nDotL;
-            vec3 ambient = vec3(gl_FragColor) * 0.3;
+            vec3 ambient = (vec3(u_lightColor) * vec3(gl_FragColor)) * 0.3;
+            vec3 diffuse = (vec3(u_lightColor) * vec3(gl_FragColor)) * nDotL;
+            vec3 specular = vec3(u_lightColor) * specularAmount;
             gl_FragColor = vec4(diffuse+ambient+specular, 1.0);
         }
     }`;
@@ -113,6 +115,7 @@ let u_litMaterial;
 let u_lightPos;
 let u_cameraPos;
 let u_showLight;
+let u_lightColor;
 
 let g_textureSources = [
     '../resources/horse.png',
@@ -143,6 +146,7 @@ let g_showNormals = false;
 let g_showLight = true;
 
 let g_lightPosition = [0, 0.5, 0];
+let g_lightColor = [1, 1, 1];
 
 // ================================================================
 // Main
@@ -239,6 +243,7 @@ function connectVariablesToGLSL() {
     u_lightPos = getUniform('u_lightPos');
     u_cameraPos = getUniform('u_cameraPos');
     u_showLight = getUniform('u_showLight');
+    u_lightColor = getUniform('u_lightColor');
 
     // Provide default values
     gl.vertexAttrib3f(a_Position, 0.0, 0.0, 0.0);
@@ -274,6 +279,7 @@ function addActionsForHTMLUI() {
     // Initialize dynamic text
     sendTextTOHTML("distanceLabel", `Render Distance (current: ${g_renderDistance})`);
     sendTextTOHTML("lightPosLabel", `Light Position (current: ${g_lightPosition})`);
+    sendTextTOHTML("lightColorLabel", `Light Color (current: ${RGBListToHexstring(g_lightColor)})`);
     sendTextTOHTML("angleLabel", `Render Angle (current: ${g_renderAngle})`);
     
     // Render distance slider
@@ -290,16 +296,6 @@ function addActionsForHTMLUI() {
         sendTextTOHTML("angleLabel", `Render Angle (current: ${g_renderAngle})`);
     });
 
-    let lightPosX = document.getElementById("lightPosX");
-    let lightPosY = document.getElementById("lightPosY");
-    let lightPosZ = document.getElementById("lightPosZ");
-    [lightPosX, lightPosY, lightPosZ].forEach((slider, index) => {
-        slider.addEventListener("input", function() {
-            g_lightPosition[index] = this.value;
-            sendTextTOHTML("lightPosLabel", `Light Position (current: ${g_lightPosition})`);
-        });
-    });
-
     // Reset sliders button
     let resetSliders = document.getElementById("resetSliders");
     resetSliders.addEventListener("mousedown", function() {
@@ -312,6 +308,11 @@ function addActionsForHTMLUI() {
         lightPosY.value = g_lightPosition[1];
         lightPosZ.value = g_lightPosition[2];
         sendTextTOHTML("lightPosLabel", `Light Position (current: ${g_lightPosition})`);
+        g_lightColor = [1, 1, 1]
+        lightColorR.value = g_lightColor[0];
+        lightColorG.value = g_lightColor[1];
+        lightColorB.value = g_lightColor[2];
+        sendTextTOHTML("lightColorLabel", `Light Color (current: ${RGBListToHexstring(g_lightColor)})`);
     });
 
     // Reset camera button
@@ -334,6 +335,26 @@ function addActionsForHTMLUI() {
     toggleLight.addEventListener("mousedown", function() {
         g_showLight = !g_showLight;
         toggleLight.value = `Toggle Normals (${g_showLight ? "On" : "Off"})`;
+    });
+
+    let lightPosX = document.getElementById("lightPosX");
+    let lightPosY = document.getElementById("lightPosY");
+    let lightPosZ = document.getElementById("lightPosZ");
+    [lightPosX, lightPosY, lightPosZ].forEach((slider, index) => {
+        slider.addEventListener("input", function() {
+            g_lightPosition[index] = this.value;
+            sendTextTOHTML("lightPosLabel", `Light Position (current: ${g_lightPosition})`);
+        });
+    });
+
+    let lightColorR = document.getElementById("lightColorR");
+    let lightColorG = document.getElementById("lightColorG");
+    let lightColorB = document.getElementById("lightColorB");
+    [lightColorR, lightColorG, lightColorB].forEach((slider, index) => {
+        slider.addEventListener("input", function() {
+            g_lightColor[index] = this.value;
+            sendTextTOHTML("lightColorLabel", `Light Color (current: ${RGBListToHexstring(g_lightColor)})`);
+        });
     });
 }
 
@@ -461,6 +482,7 @@ function renderAllShapes() {
     gl.uniform3f(u_lightPos, ...lightAnimPos);
     gl.uniform3f(u_cameraPos, ...g_camera.eye.elements);
     gl.uniform1i(u_showLight, g_showLight);
+    gl.uniform3f(u_lightColor, ...g_lightColor);
 
     // Clear <canvas>
     clearCanvas();
@@ -511,6 +533,7 @@ function renderAllShapes() {
     light.setTextureType(-2);
     light.matrix.translate(...lightAnimPos);
     light.matrix.scale(0.05, 0.05, 0.05);
+    light.setColor(g_lightColor[0], g_lightColor[1], g_lightColor[2], 1)
     light.setLitMaterial(false);
     light.render();
 
@@ -538,4 +561,10 @@ function sendTextTOHTML(htmlID, text) {
         return;
     }
     htmlElm.innerHTML = text;
+}
+
+function RGBListToHexstring(RGBlist) {
+    return `#${Math.round(RGBlist[0]*255).toString(16)}` +
+            `${Math.round(RGBlist[1]*255).toString(16)}` +
+            `${Math.round(RGBlist[2]*255).toString(16)}`;
 }
