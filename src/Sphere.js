@@ -11,7 +11,6 @@ class Sphere extends Polyhedron {
         }
         else {
             Sphere.Initialize();
-            console.log(Sphere.vertices.length);
             return Sphere.vertices;
         }
     }
@@ -91,9 +90,5 @@ class Sphere extends Polyhedron {
         Sphere.vertices = new Float32Array(vertices);
         Sphere.uvs = new Float32Array(uvs);
         Sphere.normals = new Float32Array(vertices);
-
-        // console.log(Sphere.triangles);
-        // console.log(Sphere.uvs);
-        // console.log(Sphere.normals);
     }
 }

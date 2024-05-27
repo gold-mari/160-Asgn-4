@@ -100,6 +100,8 @@ let g_music = undefined;
 
 let g_showNormals = false;
 
+let g_lightPosition = [1, 1.5, 2];
+
 // ================================================================
 // Main
 // ================================================================
@@ -116,8 +118,8 @@ function main() {
 
     g_camera = new Camera(canvas, {
         fov: 50,
-        eye: new Vector3([3,1,-3]),
-        at: new Vector3([-100,1,100]),
+        eye: new Vector3([0,1,4]),
+        at: new Vector3([0,1,-2]),
         up: new Vector3([0,1,0])
     })
 
@@ -224,6 +226,7 @@ function addActionsForHTMLUI() {
 
     // Initialize dynamic text
     sendTextTOHTML("distanceLabel", `Render Distance (current: ${g_renderDistance})`);
+    sendTextTOHTML("lightPosLabel", `Light Position (current: ${g_lightPosition})`);
     sendTextTOHTML("angleLabel", `Render Angle (current: ${g_renderAngle})`);
     
     // Render distance slider
@@ -240,13 +243,27 @@ function addActionsForHTMLUI() {
         sendTextTOHTML("angleLabel", `Render Angle (current: ${g_renderAngle})`);
     });
 
+    let lightPosX = document.getElementById("lightPosX");
+    let lightPosY = document.getElementById("lightPosY");
+    let lightPosZ = document.getElementById("lightPosZ");
+    [lightPosX, lightPosY, lightPosZ].forEach((slider, index) => {
+        slider.addEventListener("input", function() {
+            g_lightPosition[index] = this.value;
+            sendTextTOHTML("lightPosLabel", `Light Position (current: ${g_lightPosition})`);
+        });
+    });
+
     // Reset sliders button
     let resetSliders = document.getElementById("resetSliders");
     resetSliders.addEventListener("mousedown", function() {
         g_renderDistance = distance.value = 40
         sendTextTOHTML("distanceLabel", `Render Distance (current: ${g_renderDistance})`);
         g_renderAngle = angle.value = 70;
-        sendTextTOHTML("angleLabel", `Render Distance (current: ${g_renderAngle})`);
+        sendTextTOHTML("angleLabel", `Render Angle (current: ${g_renderAngle})`);
+        g_lightPosition = [1, 1.5, 2]
+        lightPosX.value = g_lightPosition[0];
+        lightPosY.value = g_lightPosition[1];
+        lightPosZ.value = g_lightPosition[2];
     });
 
     // Reset camera button
@@ -418,8 +435,16 @@ function renderAllShapes() {
     let orb = new Sphere(root);
     orb.setColorHex("ffcc00ff");
     orb.setTextureType(g_showNormals ? -3 : -2);
-    orb.matrix.translate(0, 2, 3);
+    orb.matrix.translate(-2.5, 2, -4);
+    orb.matrix.scale(1, 1, 1);
     orb.render();
+
+    let light = new Cube(root);
+    light.setColorHex("ff00ffff");
+    light.setTextureType(-2);
+    light.matrix.translate(...g_lightPosition);
+    light.matrix.scale(0.2, 0.2, 0.2);
+    light.render();
 
     g_cubesDrawn = g_map.render(root, g_seconds, g_camera, g_renderDistance, g_renderAngle, g_showNormals);
 
