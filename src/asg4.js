@@ -98,6 +98,8 @@ let g_seconds = 0;
 
 let g_music = undefined;
 
+let g_showNormals = false;
+
 // ================================================================
 // Main
 // ================================================================
@@ -252,6 +254,14 @@ function addActionsForHTMLUI() {
     resetCamera.addEventListener("mousedown", function() {
         g_camera.reset();
     });
+
+    // Toggle normals button
+    let toggleNormals = document.getElementById("toggleNormals");
+    toggleNormals.value = "Toggle Normals (Off)";
+    toggleNormals.addEventListener("mousedown", function() {
+        g_showNormals = !g_showNormals;
+        toggleNormals.value = `Toggle Normals (${g_showNormals ? "On" : "Off"})`;
+    });
 }
 
 function initTextures() {
@@ -380,32 +390,32 @@ function renderAllShapes() {
     horseCube.setColorHex("ffcc00ff");
     horseCube.matrix.translate(0, 1, 0);
     horseCube.setShadingIntensity(0.25);
-    horseCube.setTextureType(-3);
+    horseCube.setTextureType(g_showNormals ? -3 : 0);
     horseCube.matrix.scale(0.5, 0.5, 0.5);
     horseCube.render();
 
     let meCube = new Cube(root);
     meCube.setColorHex("ffcc00ff");
     meCube.setShadingIntensity(0.25);
-    meCube.setTextureType(-3);
+    meCube.setTextureType(g_showNormals ? -3 : 1);
     meCube.matrix.translate(0.5, 1, 0);
     meCube.matrix.rotate(45, 1, 1, 1);
     meCube.matrix.scale(0.2, 0.2, 0.2);
     meCube.render();
 
     let sky = new Cube(root);
-    sky.setTextureType(3);
+    sky.setTextureType(g_showNormals ? -3 : 3);
     sky.matrix.rotate(g_seconds*0.3, 1, 1, 1);
     sky.matrix.scale(256, 256, 256);
     sky.render();
 
     let sea = new Cube(root);
-    sea.setTextureType(2);
+    sea.setTextureType(g_showNormals ? -3 : 2);
     sea.matrix.translate(0, 0, 0);
     sea.matrix.scale(256, 0, 256);
     sea.render();
 
-    g_cubesDrawn = g_map.render(root, g_seconds, g_camera, g_renderDistance, g_renderAngle);
+    g_cubesDrawn = g_map.render(root, g_seconds, g_camera, g_renderDistance, g_renderAngle, g_showNormals);
 
     updatePerformanceDebug(startTime, performance.now());
 }

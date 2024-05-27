@@ -12,7 +12,7 @@ class CubeMap {
         }
     }
 
-    render(parent, seconds, camera, renderDistance=40, renderAngle=70) {
+    render(parent, seconds, camera, renderDistance=40, renderAngle=70, showNormals=false) {
         let inView = 0;
 
         let cube = new Cube(parent);
@@ -52,7 +52,7 @@ class CubeMap {
                         // If the cube's angle from our camera is within our FOV... 
                         if (angleFromFacing <= renderAngle) {
                             
-                            cube.setTextureType(2);
+                            cube.setTextureType(showNormals ? -3 : 2);
 
                             cube.matrix.setTranslate(coords[0], Math.sin(seconds+x+z)*0.2+0.01, coords[1]);
                             cube.matrix.scale(1, tileHeight*0.1, 1);
