@@ -45,7 +45,7 @@ var FSHADER_SOURCE = `
     uniform int u_whichTexture;
     uniform bool u_litMaterial;
 
-    uniform vec3 u_lightPos;
+    uniform vec3 u_pointpointLightPos;
     uniform vec3 u_cameraPos;
     uniform bool u_showLight;
     uniform vec3 u_lightColor;
@@ -79,7 +79,7 @@ var FSHADER_SOURCE = `
 
         if (u_showLight && u_litMaterial) {
             // N dot L
-            vec3 lightVector = u_lightPos-vec3(v_VertPos);
+            vec3 lightVector = u_pointpointLightPos-vec3(v_VertPos);
             float r = length(lightVector);
             vec3 N = normalize(v_Normal);
             vec3 L = normalize(lightVector);
@@ -112,7 +112,7 @@ let u_In
 let u_FragColor;
 let u_whichTexture;
 let u_litMaterial;
-let u_lightPos;
+let u_pointpointLightPos;
 let u_cameraPos;
 let u_showLight;
 let u_lightColor;
@@ -145,7 +145,7 @@ let g_music = undefined;
 let g_showNormals = false;
 let g_showLight = true;
 
-let g_lightPosition = [0, 0.5, 0];
+let g_pointpointLightPosition = [0, 0.5, 0];
 let g_lightColor = [1, 1, 1];
 
 // ================================================================
@@ -240,7 +240,7 @@ function connectVariablesToGLSL() {
     u_NormalMatrix = getUniform('u_NormalMatrix');
     u_whichTexture = getUniform('u_whichTexture');
     u_litMaterial = getUniform('u_litMaterial');
-    u_lightPos = getUniform('u_lightPos');
+    u_pointpointLightPos = getUniform('u_pointpointLightPos');
     u_cameraPos = getUniform('u_cameraPos');
     u_showLight = getUniform('u_showLight');
     u_lightColor = getUniform('u_lightColor');
@@ -278,7 +278,7 @@ function addActionsForHTMLUI() {
 
     // Initialize dynamic text
     sendTextTOHTML("distanceLabel", `Render Distance (current: ${g_renderDistance})`);
-    sendTextTOHTML("lightPosLabel", `Light Position (current: ${g_lightPosition})`);
+    sendTextTOHTML("pointLightPosLabel", `Point Light Position (current: ${g_pointpointLightPosition})`);
     sendTextTOHTML("lightColorLabel", `Light Color (current: ${RGBListToHexstring(g_lightColor)})`);
     sendTextTOHTML("angleLabel", `Render Angle (current: ${g_renderAngle})`);
     
@@ -303,11 +303,11 @@ function addActionsForHTMLUI() {
         sendTextTOHTML("distanceLabel", `Render Distance (current: ${g_renderDistance})`);
         g_renderAngle = angle.value = 70;
         sendTextTOHTML("angleLabel", `Render Angle (current: ${g_renderAngle})`);
-        g_lightPosition = [0, 0.5, 0]
-        lightPosX.value = g_lightPosition[0];
-        lightPosY.value = g_lightPosition[1];
-        lightPosZ.value = g_lightPosition[2];
-        sendTextTOHTML("lightPosLabel", `Light Position (current: ${g_lightPosition})`);
+        g_pointpointLightPosition = [0, 0.5, 0]
+        pointLightPosX.value = g_pointpointLightPosition[0];
+        pointLightPosY.value = g_pointpointLightPosition[1];
+        pointLightPosZ.value = g_pointpointLightPosition[2];
+        sendTextTOHTML("pointLightPosLabel", `Point Light Position (current: ${g_pointpointLightPosition})`);
         g_lightColor = [1, 1, 1]
         lightColorR.value = g_lightColor[0];
         lightColorG.value = g_lightColor[1];
@@ -334,16 +334,16 @@ function addActionsForHTMLUI() {
     toggleLight.value = "Toggle Lights (On)";
     toggleLight.addEventListener("mousedown", function() {
         g_showLight = !g_showLight;
-        toggleLight.value = `Toggle Normals (${g_showLight ? "On" : "Off"})`;
+        toggleLight.value = `Toggle Lights (${g_showLight ? "On" : "Off"})`;
     });
 
-    let lightPosX = document.getElementById("lightPosX");
-    let lightPosY = document.getElementById("lightPosY");
-    let lightPosZ = document.getElementById("lightPosZ");
-    [lightPosX, lightPosY, lightPosZ].forEach((slider, index) => {
+    let pointLightPosX = document.getElementById("pointLightPosX");
+    let pointLightPosY = document.getElementById("pointLightPosY");
+    let pointLightPosZ = document.getElementById("pointLightPosZ");
+    [pointLightPosX, pointLightPosY, pointLightPosZ].forEach((slider, index) => {
         slider.addEventListener("input", function() {
-            g_lightPosition[index] = this.value;
-            sendTextTOHTML("lightPosLabel", `Light Position (current: ${g_lightPosition})`);
+            g_pointpointLightPosition[index] = this.value;
+            sendTextTOHTML("pointLightPosLabel", `Point Light Position (current: ${g_pointpointLightPosition})`);
         });
     });
 
@@ -475,11 +475,11 @@ function renderAllShapes() {
 
     // Update light-related stuff
     let lightAnimPos = [
-        Number(g_lightPosition[0]) + Math.sin(g_seconds),
-        g_lightPosition[1],
-        Number(g_lightPosition[2]) + Math.cos(g_seconds)
+        Number(g_pointpointLightPosition[0]) + Math.sin(g_seconds),
+        g_pointpointLightPosition[1],
+        Number(g_pointpointLightPosition[2]) + Math.cos(g_seconds)
     ];
-    gl.uniform3f(u_lightPos, ...lightAnimPos);
+    gl.uniform3f(u_pointpointLightPos, ...lightAnimPos);
     gl.uniform3f(u_cameraPos, ...g_camera.eye.elements);
     gl.uniform1i(u_showLight, g_showLight);
     gl.uniform3f(u_lightColor, ...g_lightColor);
@@ -528,14 +528,14 @@ function renderAllShapes() {
     orb.matrix.scale(1, 1, 1);
     orb.render();
 
-    let light = new Cube(root);    
-    light.setColorHex("ff00ffff");
-    light.setTextureType(-2);
-    light.matrix.translate(...lightAnimPos);
-    light.matrix.scale(0.05, 0.05, 0.05);
-    light.setColor(g_lightColor[0], g_lightColor[1], g_lightColor[2], 1)
-    light.setLitMaterial(false);
-    light.render();
+    let pointLight = new Cube(root);    
+    pointLight.setColorHex("ff00ffff");
+    pointLight.setTextureType(-2);
+    pointLight.matrix.translate(...lightAnimPos);
+    pointLight.matrix.scale(0.05, 0.05, 0.05);
+    pointLight.setColor(g_lightColor[0], g_lightColor[1], g_lightColor[2], 1)
+    pointLight.setLitMaterial(false);
+    pointLight.render();
 
     g_cubesDrawn = g_map.render(root, g_seconds, g_camera, g_renderDistance, g_renderAngle, g_showNormals);
 

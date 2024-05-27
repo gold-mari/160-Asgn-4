@@ -32,4 +32,8 @@ body {
     transform: translate(54%, 0%);
     padding: 3.45%;
     background-color: #11111188;
-}  
+}
+
+.triple-slider .slider {
+    width: 25%;  
+}
