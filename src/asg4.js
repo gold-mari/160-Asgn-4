@@ -5,11 +5,15 @@
 // Vertex shader program
 var VSHADER_SOURCE = `
     precision mediump float;
+
     attribute vec4 a_Position;
     attribute vec2 a_UV;
     attribute vec3 a_Normal;
+
     varying vec2 v_UV;
     varying vec3 v_Normal;
+    varying vec4 v_VertPos;
+
     uniform mat4 u_ModelMatrix;
     uniform mat4 u_ViewMatrix;
     uniform mat4 u_ProjectionMatrix;
@@ -17,20 +21,26 @@ var VSHADER_SOURCE = `
         gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_ModelMatrix * a_Position;
         v_UV = a_UV;
         v_Normal = a_Normal;
+
+        v_VertPos = u_ModelMatrix * a_Position;
     }`;
 
 // Fragment shader program
 var FSHADER_SOURCE = `
     precision mediump float;
+
     varying vec2 v_UV;
     varying vec3 v_Normal;
     uniform vec4 u_FragColor;
+    varying vec4 v_VertPos;
+
     uniform sampler2D u_Sampler0;
     uniform sampler2D u_Sampler1;
     uniform sampler2D u_Sampler2;
     uniform sampler2D u_Sampler3;
-
     uniform int u_whichTexture;
+    uniform vec3 u_lightPos;
+    uniform vec3 u_cameraPos;
 
     void main() {
         if (u_whichTexture == -3) {
@@ -58,6 +68,22 @@ var FSHADER_SOURCE = `
             // Error: Use yellow to indicate missing texture
             gl_FragColor = vec4(1, 1, 0, 1);
         }
+
+        // N dot L
+        vec3 lightVector = u_lightPos-vec3(v_VertPos);
+        float r = length(lightVector);
+        vec3 N = normalize(v_Normal);
+        vec3 L = normalize(lightVector);
+        float nDotL = max(0.0, dot(N,L));
+
+        // Specular
+        vec3 reflection = reflect(-L, N);
+        vec3 eye = normalize(u_cameraPos-vec3(v_VertPos));
+        float specular = pow(max(dot(eye, reflection), 0.0), 100.0);
+
+        vec3 diffuse = vec3(gl_FragColor) * nDotL;
+        vec3 ambient = vec3(gl_FragColor) * 0.3;
+        gl_FragColor = vec4(diffuse+ambient+specular, 1.0);
     }`;
 
 let canvas;
@@ -72,6 +98,8 @@ let u_ViewMatrix;
 let u_ProjectionMatrix;
 let u_FragColor;
 let u_whichTexture;
+let u_lightPos;
+let u_cameraPos;
 
 let g_textureSources = [
     '../resources/horse.png',
@@ -100,7 +128,7 @@ let g_music = undefined;
 
 let g_showNormals = false;
 
-let g_lightPosition = [1, 1.5, 2];
+let g_lightPosition = [0, 0.5, 0];
 
 // ================================================================
 // Main
@@ -192,6 +220,8 @@ function connectVariablesToGLSL() {
     u_ViewMatrix = getUniform('u_ViewMatrix');
     u_ProjectionMatrix = getUniform('u_ProjectionMatrix');; 
     u_whichTexture = getUniform('u_whichTexture');
+    u_lightPos = getUniform('u_lightPos');
+    u_cameraPos = getUniform('u_cameraPos');
 
     // Provide default values
     gl.vertexAttrib3f(a_Position, 0.0, 0.0, 0.0);
@@ -260,10 +290,11 @@ function addActionsForHTMLUI() {
         sendTextTOHTML("distanceLabel", `Render Distance (current: ${g_renderDistance})`);
         g_renderAngle = angle.value = 70;
         sendTextTOHTML("angleLabel", `Render Angle (current: ${g_renderAngle})`);
-        g_lightPosition = [1, 1.5, 2]
+        g_lightPosition = [0, 0.5, 0]
         lightPosX.value = g_lightPosition[0];
         lightPosY.value = g_lightPosition[1];
         lightPosZ.value = g_lightPosition[2];
+        sendTextTOHTML("lightPosLabel", `Light Position (current: ${g_lightPosition})`);
     });
 
     // Reset camera button
@@ -435,15 +466,24 @@ function renderAllShapes() {
     let orb = new Sphere(root);
     orb.setColorHex("ffcc00ff");
     orb.setTextureType(g_showNormals ? -3 : -2);
-    orb.matrix.translate(-2.5, 2, -4);
+    orb.matrix.translate(-2.5, 0.5, -4);
     orb.matrix.scale(1, 1, 1);
     orb.render();
 
     let light = new Cube(root);
+    let lightAnimPos = [
+        Number(g_lightPosition[0]) + Math.sin(g_seconds),
+        g_lightPosition[1],
+        Number(g_lightPosition[2]) + Math.cos(g_seconds)
+    ];
+
+    gl.uniform3f(u_lightPos, ...lightAnimPos);
+    gl.uniform3f(u_cameraPos, ...g_camera.eye.elements)
+    
     light.setColorHex("ff00ffff");
     light.setTextureType(-2);
-    light.matrix.translate(...g_lightPosition);
-    light.matrix.scale(0.2, 0.2, 0.2);
+    light.matrix.translate(...lightAnimPos);
+    light.matrix.scale(-0.05, -0.05, -0.05);
     light.render();
 
     g_cubesDrawn = g_map.render(root, g_seconds, g_camera, g_renderDistance, g_renderAngle, g_showNormals);
