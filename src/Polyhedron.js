@@ -23,25 +23,11 @@ class Polyhedron {
         }
 
         this.normalMatrix = new Matrix4();
+        this.litMaterial = true;
     }
 
     setColor(r, g, b, a) {
         this.color = {r, g, b, a};
-    }
-
-    setTextureType(num) {
-        // -2: Fragment color
-        // -1: UV debug color
-        // 0: texture0
-        // The polyhedron will be rendered yellow if textureType is none of these.
-
-        // If UVs aren't implemented, default to the frag color.
-        if (this.uvsImplemented()) {
-            this.textureType = num;
-        } else {
-            this.textureType = -2; 
-        }
-        
     }
 
     setColorHex(hex) {
@@ -59,6 +45,24 @@ class Polyhedron {
         this.shadingIntensity = value;
     }
 
+    setTextureType(num) {
+        // -2: Fragment color
+        // -1: UV debug color
+        // 0: texture0
+        // The polyhedron will be rendered yellow if textureType is none of these.
+
+        // If UVs aren't implemented, default to the frag color.
+        if (this.uvsImplemented()) {
+            this.textureType = num;
+        } else {
+            this.textureType = -2; 
+        }
+    }
+
+    setLitMaterial(value) {
+        this.litMaterial = value;
+    }
+
     // Render methods ====
     render() {
         // Pass the model matrix to u_ModelMatrix attribute
@@ -68,6 +72,8 @@ class Polyhedron {
         gl.uniformMatrix4fv(u_NormalMatrix, false, this.normalMatrix.elements);
         // Pass in the texture type.
         gl.uniform1i(u_whichTexture, this.textureType);
+        // Pass in the texture type.
+        gl.uniform1i(u_litMaterial, this.litMaterial);
         // Pass in the fragColor. It's constant, now.
         gl.uniform4f(u_FragColor, this.color.r, this.color.g, this.color.b, 1);
 

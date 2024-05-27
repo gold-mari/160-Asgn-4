@@ -41,7 +41,10 @@ var FSHADER_SOURCE = `
     uniform sampler2D u_Sampler1;
     uniform sampler2D u_Sampler2;
     uniform sampler2D u_Sampler3;
+
     uniform int u_whichTexture;
+    uniform bool u_litMaterial;
+
     uniform vec3 u_lightPos;
     uniform vec3 u_cameraPos;
     uniform bool u_showLight;
@@ -73,7 +76,7 @@ var FSHADER_SOURCE = `
             gl_FragColor = vec4(1, 1, 0, 1);
         }
 
-        if (u_showLight) {
+        if (u_showLight && u_litMaterial) {
             // N dot L
             vec3 lightVector = u_lightPos-vec3(v_VertPos);
             float r = length(lightVector);
@@ -106,6 +109,7 @@ let u_NormalMatrix;
 let u_In
 let u_FragColor;
 let u_whichTexture;
+let u_litMaterial;
 let u_lightPos;
 let u_cameraPos;
 let u_showLight;
@@ -231,6 +235,7 @@ function connectVariablesToGLSL() {
     u_ProjectionMatrix = getUniform('u_ProjectionMatrix');
     u_NormalMatrix = getUniform('u_NormalMatrix');
     u_whichTexture = getUniform('u_whichTexture');
+    u_litMaterial = getUniform('u_litMaterial');
     u_lightPos = getUniform('u_lightPos');
     u_cameraPos = getUniform('u_cameraPos');
     u_showLight = getUniform('u_showLight');
@@ -485,6 +490,7 @@ function renderAllShapes() {
     sky.setTextureType(g_showNormals ? -3 : 3);
     sky.matrix.rotate(g_seconds*0.3, 1, 1, 1);
     sky.matrix.scale(256, 256, 256);
+    sky.setLitMaterial(false);
     sky.render();
 
     let sea = new Cube(root);
@@ -505,6 +511,7 @@ function renderAllShapes() {
     light.setTextureType(-2);
     light.matrix.translate(...lightAnimPos);
     light.matrix.scale(0.05, 0.05, 0.05);
+    light.setLitMaterial(false);
     light.render();
 
     g_cubesDrawn = g_map.render(root, g_seconds, g_camera, g_renderDistance, g_renderAngle, g_showNormals);
