@@ -405,8 +405,8 @@ function renderAllShapes() {
 
     let sky = new Cube(root);
     sky.setTextureType(g_showNormals ? -3 : 3);
-    sky.matrix.rotate(g_seconds*0.3, 1, 1, 1);
-    sky.matrix.scale(256, 256, 256);
+    // sky.matrix.rotate(g_seconds*0.3, 1, 1, 1);
+    sky.matrix.scale(-256, -256, -256);
     sky.render();
 
     let sea = new Cube(root);
