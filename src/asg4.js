@@ -17,10 +17,13 @@ var VSHADER_SOURCE = `
     uniform mat4 u_ModelMatrix;
     uniform mat4 u_ViewMatrix;
     uniform mat4 u_ProjectionMatrix;
+    uniform mat4 u_NormalMatrix;
+
     void main() {
         gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_ModelMatrix * a_Position;
         v_UV = a_UV;
-        v_Normal = a_Normal;
+        
+        v_Normal = normalize(vec3(u_NormalMatrix * vec4(a_Normal, 1)));
 
         v_VertPos = u_ModelMatrix * a_Position;
     }`;
@@ -99,6 +102,8 @@ let a_Normal;
 let u_ModelMatrix;
 let u_ViewMatrix;
 let u_ProjectionMatrix;
+let u_NormalMatrix;
+let u_In
 let u_FragColor;
 let u_whichTexture;
 let u_lightPos;
@@ -223,7 +228,8 @@ function connectVariablesToGLSL() {
     u_FragColor = getUniform('u_FragColor');
     u_ModelMatrix = getUniform('u_ModelMatrix');
     u_ViewMatrix = getUniform('u_ViewMatrix');
-    u_ProjectionMatrix = getUniform('u_ProjectionMatrix');; 
+    u_ProjectionMatrix = getUniform('u_ProjectionMatrix');
+    u_NormalMatrix = getUniform('u_NormalMatrix');
     u_whichTexture = getUniform('u_whichTexture');
     u_lightPos = getUniform('u_lightPos');
     u_cameraPos = getUniform('u_cameraPos');
@@ -477,8 +483,8 @@ function renderAllShapes() {
 
     let sky = new Cube(root);
     sky.setTextureType(g_showNormals ? -3 : 3);
-    // sky.matrix.rotate(g_seconds*0.3, 1, 1, 1);
-    sky.matrix.scale(-256, -256, -256);
+    sky.matrix.rotate(g_seconds*0.3, 1, 1, 1);
+    sky.matrix.scale(256, 256, 256);
     sky.render();
 
     let sea = new Cube(root);
@@ -498,7 +504,7 @@ function renderAllShapes() {
     light.setColorHex("ff00ffff");
     light.setTextureType(-2);
     light.matrix.translate(...lightAnimPos);
-    light.matrix.scale(-0.05, -0.05, -0.05);
+    light.matrix.scale(0.05, 0.05, 0.05);
     light.render();
 
     g_cubesDrawn = g_map.render(root, g_seconds, g_camera, g_renderDistance, g_renderAngle, g_showNormals);

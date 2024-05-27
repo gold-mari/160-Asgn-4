@@ -21,6 +21,8 @@ class Polyhedron {
             this.matrix = new Matrix4(parent.matrix);
             this.color = parent.color;
         }
+
+        this.normalMatrix = new Matrix4();
     }
 
     setColor(r, g, b, a) {
@@ -61,6 +63,9 @@ class Polyhedron {
     render() {
         // Pass the model matrix to u_ModelMatrix attribute
         gl.uniformMatrix4fv(u_ModelMatrix, false, this.matrix.elements);
+        // Redefined the normal matrix, and pass that into the shader also.
+        this.normalMatrix.setInverseOf(this.matrix).transpose();        
+        gl.uniformMatrix4fv(u_NormalMatrix, false, this.normalMatrix.elements);
         // Pass in the texture type.
         gl.uniform1i(u_whichTexture, this.textureType);
         // Pass in the fragColor. It's constant, now.
