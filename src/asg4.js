@@ -415,6 +415,12 @@ function renderAllShapes() {
     sea.matrix.scale(256, 0, 256);
     sea.render();
 
+    let orb = new Sphere(root);
+    orb.setColorHex("ffcc00ff");
+    orb.setTextureType(g_showNormals ? -3 : -2);
+    orb.matrix.translate(0, 2, 3);
+    orb.render();
+
     g_cubesDrawn = g_map.render(root, g_seconds, g_camera, g_renderDistance, g_renderAngle, g_showNormals);
 
     updatePerformanceDebug(startTime, performance.now());

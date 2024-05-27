@@ -7,7 +7,7 @@ class Icosahedron extends Polyhedron {
 
     getTriangles() {
         if (Icosahedron.triangles) {
-            return Icosahedron.triangles;
+            return Sphere.triangles;
         }
         else {
             // Generate the triangles!

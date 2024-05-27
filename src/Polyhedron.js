@@ -74,6 +74,7 @@ class Polyhedron {
             console.log(`Polyhedron Error: Missing Normal map for ${this.constructor.name}`)
         }
         
+        // console.log(`Length verts: {}`)
         Triangle.drawTriangle3DUVNormal(this.getVertices(), this.getUVs(), this.getNormals());
     }
 
