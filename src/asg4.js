@@ -7,19 +7,23 @@ var VSHADER_SOURCE = `
     precision mediump float;
     attribute vec4 a_Position;
     attribute vec2 a_UV;
+    attribute vec3 a_Normal;
     varying vec2 v_UV;
+    varying vec3 v_Normal;
     uniform mat4 u_ModelMatrix;
     uniform mat4 u_ViewMatrix;
     uniform mat4 u_ProjectionMatrix;
     void main() {
         gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_ModelMatrix * a_Position;
         v_UV = a_UV;
+        v_Normal = a_Normal;
     }`;
 
 // Fragment shader program
 var FSHADER_SOURCE = `
     precision mediump float;
     varying vec2 v_UV;
+    varying vec3 v_Normal;
     uniform vec4 u_FragColor;
     uniform sampler2D u_Sampler0;
     uniform sampler2D u_Sampler1;
@@ -29,7 +33,10 @@ var FSHADER_SOURCE = `
     uniform int u_whichTexture;
 
     void main() {
-        if (u_whichTexture == -2) {
+        if (u_whichTexture == -3) {
+            // Use normal debug color
+            gl_FragColor = vec4((v_Normal+1.0)/2.0, 1.0);
+        } else if (u_whichTexture == -2) {
             // Use fragment color
             gl_FragColor = u_FragColor;
         } else if (u_whichTexture == -1) {
@@ -55,12 +62,16 @@ var FSHADER_SOURCE = `
 
 let canvas;
 let gl;
+
 let a_Position;
+let a_UV;
+let a_Normal;
+
 let u_ModelMatrix;
 let u_ViewMatrix;
 let u_ProjectionMatrix;
-let a_UV;
 let u_FragColor;
+let u_whichTexture;
 
 let g_textureSources = [
     '../resources/horse.png',
@@ -70,8 +81,6 @@ let g_textureSources = [
 ];
 let u_Samplers = [];
 let g_Textures = [];
-
-let u_whichTexture;
 
 let g_dragStartAngle = [0, 0];
 let g_dragStartMousePos = [0, 0];
@@ -172,6 +181,7 @@ function connectVariablesToGLSL() {
 
     a_Position = getAttrib('a_Position');
     a_UV = getAttrib('a_UV');
+    a_Normal = getAttrib('a_Normal');
 
     u_FragColor = getUniform('u_FragColor');
     u_ModelMatrix = getUniform('u_ModelMatrix');
@@ -366,21 +376,22 @@ function renderAllShapes() {
     root.matrix.translate(0, 0, 0);
     root.matrix.scale(1, 1, 1);
 
-    // let horseCube = new Cube(root);
-    // horseCube.setColorHex("ffcc00ff");
-    // horseCube.matrix.translate(0, 1, 0);
-    // horseCube.setShadingIntensity(0.25);
-    // horseCube.matrix.scale(0.5, 0.5, 0.5);
-    // horseCube.render();
+    let horseCube = new Cube(root);
+    horseCube.setColorHex("ffcc00ff");
+    horseCube.matrix.translate(0, 1, 0);
+    horseCube.setShadingIntensity(0.25);
+    horseCube.setTextureType(-3);
+    horseCube.matrix.scale(0.5, 0.5, 0.5);
+    horseCube.render();
 
-    // let meCube = new Cube(root);
-    // meCube.setColorHex("ffcc00ff");
-    // meCube.setShadingIntensity(0.25);
-    // meCube.setTextureType(1);
-    // meCube.matrix.translate(0.5, 1, 0);
-    // meCube.matrix.rotate(45, 1, 1, 1);
-    // meCube.matrix.scale(0.2, 0.2, 0.2);
-    // meCube.render();
+    let meCube = new Cube(root);
+    meCube.setColorHex("ffcc00ff");
+    meCube.setShadingIntensity(0.25);
+    meCube.setTextureType(-3);
+    meCube.matrix.translate(0.5, 1, 0);
+    meCube.matrix.rotate(45, 1, 1, 1);
+    meCube.matrix.scale(0.2, 0.2, 0.2);
+    meCube.render();
 
     let sky = new Cube(root);
     sky.setTextureType(3);

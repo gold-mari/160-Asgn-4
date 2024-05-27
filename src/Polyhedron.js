@@ -69,8 +69,12 @@ class Polyhedron {
         if (!this.uvsImplemented()) {
             console.log(`Polyhedron Error: Missing UV map for ${this.constructor.name}`)
         }
+
+        if (!this.normalsImplemented()) {
+            console.log(`Polyhedron Error: Missing Normal map for ${this.constructor.name}`)
+        }
         
-        Triangle.drawTriangle3DUV(this.getVertices(), this.getUVs());
+        Triangle.drawTriangle3DUVNormal(this.getVertices(), this.getUVs(), this.getNormals());
     }
 
     getVertices() {
@@ -81,13 +85,22 @@ class Polyhedron {
         return Polyhedron.uvs;
     }
 
+    getNormals() {
+        return Polyhedron.normals;
+    }
+
     uvsImplemented() {
+        return false;
+    }
+
+    normalsImplemented() {
         return false;
     }
 
     static triangles = [];
     static vertices = [];
     static uvs = [];
+    static normals = [];
 
     static lerp(start, end, amount) {
         return (1-amount)*start + amount*end;

@@ -142,4 +142,40 @@ class Triangle {
 
         gl.drawArrays(gl.TRIANGLES, 0, n);
     }
+
+    static drawTriangle3DUVNormal(vertices, uv, normals) {
+
+        let n = vertices.length/3;
+        if (n != uv.length/2 || n != normals.length/3) {
+            console.log("Triangle Error: drawTriangle3DUV failed.\n" + 
+                        `Different number of vertices (${n}), ` +
+                        `UVs (${uv.length/2}), or normals (${normals.length/2}).`);
+            return -1;
+        }
+
+        bindBuffer(vertices, a_Position, 3);
+        bindBuffer(uv, a_UV, 2);
+        bindBuffer(normals, a_Normal, 3);
+
+        gl.drawArrays(gl.TRIANGLES, 0, n);
+
+        // Local function for binding a buffer.
+        function bindBuffer(data, attribute, size) {
+            // Create a vertex buffer object
+            let buffer = gl.createBuffer();
+            if (!buffer) {
+                console.log("Triangle Error: drawTriangle3DUV failed. Failed to create the buffer object.");
+                return -1;
+            }
+    
+            // Bind the buffer object to target
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            // Write data into the buffer object
+            gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+            // Assign the buffer object to a_Position variable
+            gl.vertexAttribPointer(attribute, size, gl.FLOAT, false, 0, 0);
+            // Enable the assignment to a_Position variable
+            gl.enableVertexAttribArray(attribute);
+        }
+    }
 }
